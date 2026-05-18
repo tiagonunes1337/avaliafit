@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Restrito - Gerenciar Horários - Avalia FIT</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
+
+<script>
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+
+    if (!token) {
+        window.location.href = '/login.html';
+    }
+    // Impede que Pacientes acessem a tela de gerenciamento de agenda
+    if (role === 'ROLE_PACIENTE') {
+        alert('Acesso Negado: Esta página é exclusiva para funcionários.');
+        window.location.href = '/inicial.html';
+    }
+</script>
+
+<header class="bg-gray-900 border-b-4 border-blue-600 sticky top-0 z-50 p-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <img src="img/logoavaliafit.png" alt="Avalia FIT Logo" class="w-28 h-auto grayscale brightness-200">
+            <span class="bg-blue-600/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-blue-600/30">
+                    Área Restrita
+                </span>
+        </div>
+        <nav class="hidden md:flex items-center gap-6 text-gray-300">
+            <a href="listarusuarios.html" class="hover:text-white transition font-medium">Usuários</a>
+            <a href="gerenciarhorarios.html" class="text-blue-400 font-bold border-b-2 border-blue-500 pb-1">Gerenciar Agenda</a>
+            <a href="cadastro.html" class="hover:text-white transition font-medium">Novo Cadastro</a>
+            <a href="login.html" class="text-red-400 hover:text-red-300 transition font-medium text-sm ml-4">Sair do Painel</a>
+        </nav>
+    </div>
+</header>
+
+<main class="flex-grow flex items-center justify-center p-6">
+    <div class="w-full max-w-2xl bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl">
+        <h1 class="text-2xl font-bold text-white mb-2">Disponibilizar Horário na Agenda</h1>
+        <p class="text-gray-400 mb-8">Cadastre os dias e horários livres para que os pacientes possam realizar os agendamentos.</p>
+
+        <form id="horarioForm" class="space-y-6">
+
+            <div id="blocoProfissional" class="hidden">
+                <label for="profissional" class="block text-gray-300 font-semibold mb-2">Profissional / Nutricionista</label>
+                <select id="profissional" class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none">
+                    <option value="">Carregando profissionais...</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="data" class="block text-gray-300 font-semibold mb-2">Data do Atendimento</label>
+                    <input type="date" id="data" required class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div>
+                    <label for="horario" class="block text-gray-300 font-semibold mb-2">Horário de Início</label>
+                    <input type="time" id="horario" required class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-gray-800">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg shadow-blue-600/20">
+                    Abrir Vaga na Agenda
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+    // Removemos a declaração repetida do 'token' e 'role', pois já existem no topo da página!
+    const loggedInUserId = localStorage.getItem('userId');
+
+    // Lógica executada ao carregar a página
+    async function inicializarTela() {
+        const blocoProfissional = document.getElementById('blocoProfissional');
+        const selectProfissional = document.getElementById('profissional');
+
+        // Se for Admin ou Gerente, ele pode escolher para qual funcionário vai criar o horário
+        // Usamos a variável 'role' que foi declarada no script do topo
+        if (role === 'ROLE_ADMIN' || role === 'ROLE_GERENTE') {
+            blocoProfissional.classList.remove('hidden');
+
+            try {
+                // CORREÇÃO 1: Busca em /usuarios para listar a equipe médica
+                const response = await fetch('http://localhost:8080/usuarios', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (response.ok) {
+                    const usuarios = await response.json();
+                    selectProfissional.innerHTML = '<option value="">Selecione o profissional...</option>';
+
+                    // Filtra para exibir no select apenas quem é funcionário/admin/gerente
+                    usuarios.forEach(u => {
+                        if (u.role !== 'ROLE_PACIENTE') {
+                            selectProfissional.innerHTML += `<option value="${u.id}">${u.nome} (${u.role.replace('ROLE_', '')})</option>`;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao buscar funcionários:', error);
+                selectProfissional.innerHTML = '<option value="">Erro ao carregar lista</option>';
+            }
+        }
+    }
+
+    // Submissão do formulário (POST para a API)
+    document.getElementById('horarioForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Agora este comando vai funcionar perfeitamente!
+
+        let idFuncionarioTarget;
+
+        if (role === 'ROLE_ADMIN' || role === 'ROLE_GERENTE') {
+            const comboValue = document.getElementById('profissional').value;
+            if (!comboValue) {
+                alert('Por favor, selecione um profissional.');
+                return;
+            }
+            idFuncionarioTarget = parseInt(comboValue);
+        } else {
+            idFuncionarioTarget = parseInt(loggedInUserId);
+        }
+
+        const formData = {
+            idFuncionario: idFuncionarioTarget,
+            data: document.getElementById('data').value,
+            horario: document.getElementById('horario').value + ":00"
+        };
+
+        try {
+            // CORREÇÃO 2: Endereço completo da API
+            const response = await fetch('http://localhost:8080/horarios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert('Horário disponibilizado com sucesso na agenda!');
+                document.getElementById('horario').value = ''; // Limpa a hora após sucesso
+            } else {
+                const errorData = await response.json();
+                alert('Erro ao salvar: ' + (errorData.mensagem || 'Falha na operação.'));
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Não foi possível conectar ao servidor. O Spring Boot está rodando?');
+        }
+    });
+
+    // Inicia a tela
+    inicializarTela();
+</script>
+</body>
+</html>

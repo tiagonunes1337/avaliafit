@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Editar Usuário</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
+
+<script>
+    if (!localStorage.getItem('token')) {
+        window.location.href = '/login.html';
+    }
+</script>
+
+<header class="bg-gray-900 border-b-4 border-blue-600 sticky top-0 z-50 p-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <img src="img/logoavaliafit.png" alt="Avalia FIT Logo" class="w-28 h-auto grayscale brightness-200">
+            <span class="bg-blue-600/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-blue-600/30">
+                    Edição
+                </span>
+        </div>
+        <nav class="hidden md:flex items-center gap-6 text-gray-300">
+            <a href="listarusuarios.html" class="hover:text-white transition font-medium text-sm">&larr; Voltar para a Lista</a>
+        </nav>
+    </div>
+</header>
+
+<main class="flex-grow p-6 md:p-12 flex justify-center items-start">
+    <div class="w-full max-w-3xl bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl">
+
+        <div class="mb-8 pb-4 border-b border-gray-800">
+            <h1 class="text-2xl font-bold text-white">Editar o Usuário</h1>
+            <p class="text-gray-400 mt-1">Atualize os dados necessários abaixo.</p>
+        </div>
+
+        <form id="editarForm" action="#" method="POST" class="space-y-6">
+
+            <h3 class="text-lg font-semibold text-white border-l-4 border-blue-500 pl-3">Dados Pessoais</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-950/50 p-4 rounded-xl border border-gray-800">
+
+                <div class="md:col-span-2">
+                    <label for="nome" class="block text-gray-400 font-medium mb-2 text-sm">Nome Completo</label>
+                    <input type="text" id="nome" name="nome" required class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div>
+                    <label for="cpf" class="block text-gray-400 font-medium mb-2 text-sm">CPF</label>
+                    <input type="text" id="cpf" name="cpf" required class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div>
+                    <label for="telefone" class="block text-gray-400 font-medium mb-2 text-sm">Telefone / WhatsApp</label>
+                    <input type="tel" id="telefone" name="telefone" required class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+            </div>
+
+            <h3 class="text-lg font-semibold text-white border-l-4 border-blue-500 pl-3 mt-8">Acesso ao Sistema</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-950/50 p-4 rounded-xl border border-gray-800">
+
+                <div>
+                    <label for="email" class="block text-gray-400 font-medium mb-2 text-sm">E-mail de Acesso</label>
+                    <input type="email" id="email" name="email" required class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div>
+                    <label for="senha" class="block text-gray-400 font-medium mb-2 text-sm">Nova Senha (opcional)</label>
+                    <input type="password" id="senha" name="senha" placeholder="Deixe em branco para não alterar" class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+            </div>
+
+            <div class="pt-6 flex justify-end gap-4">
+                <button type="submit" class="px-8 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition shadow-lg shadow-blue-600/20">
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+    // 1. Pegar o ID do usuário que veio na URL (ex: editarusuario.html?id=5)
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id');
+    const token = localStorage.getItem('token');
+
+    // 2. Carregar os dados atuais do usuário assim que a página abrir
+    async function carregarDados() {
+        if (!userId) {
+            alert("Nenhum usuário selecionado para edição.");
+            window.location.href = 'listarusuarios.html';
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:8080/usuarios/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const usuario = await response.json();
+                document.getElementById('nome').value = usuario.nome;
+                document.getElementById('cpf').value = usuario.cpf;
+                document.getElementById('telefone').value = usuario.telefone;
+                document.getElementById('email').value = usuario.email;
+            } else {
+                alert("Erro ao buscar dados do usuário.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Erro de conexão com a API.");
+        }
+    }
+
+    // 3. Salvar os dados editados (Método PUT)
+    document.getElementById('editarForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = {
+            nome: document.getElementById('nome').value,
+            cpf: document.getElementById('cpf').value,
+            telefone: document.getElementById('telefone').value,
+            email: document.getElementById('email').value,
+            // A senha só é enviada se o usuário digitou algo
+            senha: document.getElementById('senha').value || null
+        };
+
+        try {
+            const response = await fetch(`http://localhost:8080/usuarios/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert('Usuário atualizado com sucesso!');
+                window.location.href = 'listarusuarios.html'; // Volta pra lista
+            } else {
+                const errorData = await response.json();
+                alert('Erro: ' + (errorData.mensagem || 'Falha na atualização.'));
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Não foi possível conectar ao servidor.");
+        }
+    });
+
+    // Inicia o carregamento
+    carregarDados();
+</script>
+</body>
+</html>

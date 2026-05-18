@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Cadastro - Avalia FIT</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
+<script>
+    if (!localStorage.getItem('token')) {
+        window.location.href = '/login.html';
+    }
+</script>
+
+<header class="bg-gray-900 border-b-4 border-blue-600 sticky top-0 z-50 p-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <img src="img/logoavaliafit.png" alt="Avalia FIT Logo" class="w-28 h-auto grayscale brightness-200">
+            <span class="bg-blue-600/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-blue-600/30">
+                    Área Restrita
+                </span>
+        </div>
+        <nav class="hidden md:flex items-center gap-6 text-gray-300">
+            <a href="#" class="hover:text-white transition font-medium">Pacientes</a>
+            <a href="#" class="hover:text-white transition font-medium">Agenda</a>
+            <a href="#" class="text-blue-400 font-bold border-b-2 border-blue-500 pb-1">Novo Cadastro</a>
+            <a href="login.html" class="text-red-400 hover:text-red-300 transition font-medium text-sm ml-4">Sair do Painel</a>
+        </nav>
+    </div>
+</header>
+
+<main class="flex-grow p-6 md:p-12 flex justify-center items-start">
+    <div class="w-full max-w-3xl bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl">
+
+        <div class="mb-8 pb-4 border-b border-gray-800">
+            <h1 class="text-2xl font-bold text-white">Cadastrar Novo Usuário</h1>
+            <p class="text-gray-400 mt-1">Preencha os dados para registrar um novo paciente ou membro da equipe no sistema Avalia FIT.</p>
+        </div>
+
+        <form id="cadastroForm" action="#" method="POST" class="space-y-6">
+
+            <h3 class="text-lg font-semibold text-white border-l-4 border-blue-500 pl-3">Dados Pessoais</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-950/50 p-4 rounded-xl border border-gray-800">
+
+                <div class="md:col-span-2">
+                    <label for="nome" class="block text-gray-400 font-medium mb-2 text-sm">Nome Completo</label>
+                    <input type="text" id="nome" name="nome" placeholder="Digite o nome completo" required class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div>
+                    <label for="cpf" class="block text-gray-400 font-medium mb-2 text-sm">CPF</label>
+                    <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" required class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div>
+                    <label for="telefone" class="block text-gray-400 font-medium mb-2 text-sm">Telefone / WhatsApp</label>
+                    <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000" class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div>
+                    <label for="dataNascimento" class="block text-gray-400 font-medium mb-2 text-sm">Data de Nascimento</label>
+                    <input type="date" id="dataNascimento" name="dataNascimento" required class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+            </div>
+
+            <h3 class="text-lg font-semibold text-white border-l-4 border-blue-500 pl-3 mt-8">Acesso ao Sistema</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-950/50 p-4 rounded-xl border border-gray-800">
+
+                <div>
+                    <label for="email" class="block text-gray-400 font-medium mb-2 text-sm">E-mail de Acesso</label>
+                    <input type="email" id="email" name="email" placeholder="usuario@email.com" required class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div>
+                    <label for="senha" class="block text-gray-400 font-medium mb-2 text-sm">Senha Provisória</label>
+                    <input type="password" id="senha" name="senha" placeholder="••••••••" required class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="role" class="block text-gray-400 font-medium mb-2 text-sm">Nível de Permissão (Role)</label>
+                    <select id="role" name="role" required class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none">
+                        <option value="ROLE_PACIENTE">Paciente (Acesso apenas ao dashboard pessoal)</option>
+                        <option value="ROLE_FUNCIONARIO">Nutricionista (Acesso a dados de pacientes)</option>
+                        <option value="ROLE_GERENTE">Gerente (Acesso a relatórios da unidade)</option>
+                        <option value="ROLE_ADMIN">Administrador (Acesso total ao sistema)</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-2">Atenção: Apenas atribua cargos administrativos a membros oficiais da equipe.</p>
+                </div>
+
+                <div id="campoPaciente" class="md:col-span-2 hidden">
+                    <label for="objetivo" class="block text-gray-400 font-medium mb-2 text-sm">Objetivo do Paciente</label>
+                    <input type="text" id="objetivo" name="objetivo" placeholder="Ex: Emagrecimento, Hipertrofia..." class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div id="campoFuncionario" class="md:col-span-2 hidden">
+                    <label for="cargo" class="block text-gray-400 font-medium mb-2 text-sm">Cargo do Funcionário</label>
+                    <input type="text" id="cargo" name="cargo" placeholder="Ex: Nutricionista Esportivo, Recepcionista..." class="w-full px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+            </div>
+
+            <div class="pt-6 flex justify-end gap-4">
+                <button type="reset" class="px-6 py-2.5 bg-transparent border border-gray-700 text-gray-400 rounded-lg hover:bg-gray-800 transition">
+                    Limpar
+                </button>
+                <button type="submit" class="px-8 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition shadow-lg shadow-blue-600/20">
+                    Finalizar Cadastro
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+    // Lógica para alternar os campos dinâmicos
+    document.getElementById('role').addEventListener('change', function() {
+        const role = this.value;
+        const campoPaciente = document.getElementById('campoPaciente');
+        const campoFuncionario = document.getElementById('campoFuncionario');
+
+        if (role === 'ROLE_PACIENTE') {
+            campoPaciente.classList.remove('hidden');
+            campoFuncionario.classList.add('hidden');
+        } else {
+            campoPaciente.classList.add('hidden');
+            campoFuncionario.classList.remove('hidden');
+        }
+    });
+
+    // Dispara o evento ao carregar a página para configurar a exibição inicial
+    document.getElementById('role').dispatchEvent(new Event('change'));
+
+    // Lógica de Envio para a API
+    document.getElementById('cadastroForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Impede o recarregamento da página
+
+        // Captura os dados do formulário, incluindo os novos campos dinâmicos
+        const formData = {
+            nome: document.getElementById('nome').value,
+            cpf: document.getElementById('cpf').value,
+            telefone: document.getElementById('telefone').value,
+            dataNascimento: document.getElementById('dataNascimento').value,
+            email: document.getElementById('email').value,
+            senha: document.getElementById('senha').value,
+            role: document.getElementById('role').value,
+            objetivo: document.getElementById('objetivo').value,
+            cargo: document.getElementById('cargo').value
+        };
+
+        // Resgata o token JWT
+        const token = localStorage.getItem('token');
+
+        try {
+            // Rota com localhost:8080 especificado para evitar erro de conexão
+            const response = await fetch('http://localhost:8080/usuarios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert('Usuário cadastrado com sucesso!');
+                document.getElementById('cadastroForm').reset();
+                // Reseta os campos dinâmicos para o estado padrão
+                document.getElementById('role').dispatchEvent(new Event('change'));
+            } else {
+                const errorData = await response.json();
+                alert('Erro: ' + (errorData.mensagem || 'Falha no cadastro'));
+            }
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            alert('Não foi possível conectar ao servidor. Verifique se o Spring Boot está rodando.');
+        }
+    });
+</script>
+</body>
+</html>

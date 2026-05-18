@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Avaliação - Avalia FIT</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
+
+<script>
+    const token = localStorage.getItem('token' );
+    const role = localStorage.getItem('role');
+    const loggedInUserId = localStorage.getItem('userId');
+
+    if (!token || (role !== 'ROLE_ADMIN' && role !== 'ROLE_GERENTE' && role !== 'ROLE_FUNCIONARIO')) {
+        alert('Acesso Negado: Esta página é exclusiva para funcionários.');
+        window.location.href = '/login.html';
+    }
+</script>
+
+<header class="bg-gray-900 border-b-4 border-blue-600 sticky top-0 z-50 p-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <img src="img/logoavaliafit.png" alt="Avalia FIT Logo" class="w-28 h-auto grayscale brightness-200">
+            <span class="bg-blue-600/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-blue-600/30">
+                    Área Restrita
+                </span>
+        </div>
+        <nav class="hidden md:flex items-center gap-6 text-gray-300">
+            <a href="listarusuarios.html" class="hover:text-white transition font-medium">Usuários</a>
+            <a href="gerenciarhorarios.html" class="hover:text-white transition font-medium">Gerenciar Agenda</a>
+            <a href="cadastro.html" class="hover:text-white transition font-medium">Novo Cadastro</a>
+            <a href="registraravaliacao.html" class="text-blue-400 font-bold border-b-2 border-blue-500 pb-1">Registrar Avaliação</a>
+            <a href="login.html" class="text-red-400 hover:text-red-300 transition font-medium text-sm ml-4">Sair do Painel</a>
+        </nav>
+    </div>
+</header>
+
+<main class="flex-grow flex items-center justify-center p-6">
+    <div class="w-full max-w-3xl bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl">
+        <h1 class="text-2xl font-bold text-white mb-2">Registrar Nova Avaliação</h1>
+        <p class="text-gray-400 mb-8">Selecione um agendamento e preencha os dados da avaliação física.</p>
+
+        <form id="avaliacaoForm" class="space-y-6">
+
+            <div>
+                <label for="agendamento" class="block text-gray-300 font-semibold mb-2">Agendamento para Avaliar</label>
+                <select id="agendamento" required class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none">
+                    <option value="">Carregando agendamentos...</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="peso" class="block text-gray-300 font-semibold mb-2">Peso (kg)</label>
+                    <input type="number" id="peso" step="0.01" required class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div>
+                    <label for="altura" class="block text-gray-300 font-semibold mb-2">Altura (m)</label>
+                    <input type="number" id="altura" step="0.01" required class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div>
+                    <label for="percentualGordura" class="block text-gray-300 font-semibold mb-2">% Gordura</label>
+                    <input type="number" id="percentualGordura" step="0.01" required class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div>
+                    <label for="massaMuscular" class="block text-gray-300 font-semibold mb-2">Massa Muscular (kg)</label>
+                    <input type="number" id="massaMuscular" step="0.01" required class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+            </div>
+
+            <div>
+                <label for="observacoes" class="block text-gray-300 font-semibold mb-2">Observações</label>
+                <textarea id="observacoes" rows="4" class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition resize-none"></textarea>
+            </div>
+
+            <div class="pt-4 border-t border-gray-800">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg shadow-blue-600/20">
+                    Registrar Avaliação
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+    async function carregarAgendamentosParaAvaliacao() {
+        const selectAgendamento = document.getElementById('agendamento');
+        selectAgendamento.innerHTML = '<option value="">Carregando agendamentos...</option>';
+
+        try {
+            const response = await fetch('http://localhost:8080/agendamentos/para-avaliacao', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            } );
+
+            if (response.ok) {
+                const agendamentos = await response.json();
+                selectAgendamento.innerHTML = '<option value="">Selecione um agendamento...</option>';
+
+                if (agendamentos.length === 0) {
+                    selectAgendamento.innerHTML = '<option value="">Nenhum agendamento disponível para avaliação</option>';
+                    return;
+                }
+
+                agendamentos.forEach(ag => {
+                    const dataFormatada = new Date(ag.dataConsulta).toLocaleDateString('pt-BR');
+                    selectAgendamento.innerHTML += `<option value="${ag.idAgendamento}">
+                        ${dataFormatada} ${ag.horario} - ${ag.nomePaciente} (${ag.tipoServico})
+                    </option>`;
+                });
+            } else {
+                console.error('Erro ao carregar agendamentos:', response.status);
+                selectAgendamento.innerHTML = '<option value="">Erro ao carregar agendamentos</option>';
+            }
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            selectAgendamento.innerHTML = '<option value="">Não foi possível conectar ao servidor.</option>';
+        }
+    }
+
+    document.getElementById('avaliacaoForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const idAgendamento = document.getElementById('agendamento').value;
+        if (!idAgendamento) {
+            alert('Por favor, selecione um agendamento.');
+            return;
+        }
+
+        // O idPaciente e idFuncionario serão obtidos do agendamento no backend
+        const formData = {
+            idAgendamento: parseInt(idAgendamento),
+            peso: parseFloat(document.getElementById('peso').value),
+            altura: parseFloat(document.getElementById('altura').value),
+            percentualGordura: parseFloat(document.getElementById('percentualGordura').value),
+            massaMuscular: parseFloat(document.getElementById('massaMuscular').value),
+            observacoes: document.getElementById('observacoes').value
+        };
+
+        try {
+            const response = await fetch('http://localhost:8080/avaliacoes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(formData )
+            });
+
+            if (response.ok) {
+                alert('Avaliação registrada com sucesso!');
+                window.location.href = '/inicial.html'; // Redireciona após o sucesso
+            } else {
+                const errorData = await response.json();
+                alert('Erro ao registrar avaliação: ' + (errorData.mensagem || 'Falha na operação.'));
+            }
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            alert('Não foi possível conectar ao servidor.');
+        }
+    });
+
+    carregarAgendamentosParaAvaliacao();
+</script>
+</body>
+</html>

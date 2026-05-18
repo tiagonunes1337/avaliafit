@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendar Consulta - Avalia FIT</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
+
+<script>
+    if (!localStorage.getItem('token')) {
+        window.location.href = '/login.html';
+    }
+</script>
+
+<header class="bg-gray-900 border-b border-green-500 sticky top-0 z-50 p-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <img src="img/logoavaliafit.png" alt="Avalia FIT Logo" class="w-28 h-auto">
+        </div>
+        <nav class="hidden md:flex items-center gap-8 text-gray-300">
+            <a href="inicial.html" class="hover:text-green-400 transition font-medium">Dashboard</a>
+            <a href="marcar.html" class="text-green-500 font-bold border-b-2 border-green-500 pb-1">Marcar Consulta</a>
+        </nav>
+        <div class="w-10 h-10 bg-gray-800 rounded-full border-2 border-green-500 overflow-hidden">
+            <img src="https://ui-avatars.com/api/?name=Usuario+Fit&background=1f2937&color=22c55e" alt="Avatar">
+        </div>
+    </div>
+</header>
+
+<main class="flex-grow flex items-center justify-center p-6">
+    <div class="w-full max-w-2xl bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl">
+        <h1 class="text-2xl font-bold text-white mb-2">Agendar Nova Avaliação</h1>
+        <p class="text-gray-400 mb-8">Selecione o serviço desejado e a data para escolher um dos horários disponíveis na clínica.</p>
+
+        <form id="agendamentoForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div>
+                    <label for="servico" class="block text-gray-300 font-semibold mb-2">Tipo de Serviço</label>
+                    <select id="servico" required class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition appearance-none">
+                        <option value="">Selecione...</option>
+                        <option value="bioimpedancia">Bioimpedância (Retorno)</option>
+                        <option value="completa">Avaliação Física Completa</option>
+                        <option value="nutricional">Ajuste de Plano Nutricional</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="data" class="block text-gray-300 font-semibold mb-2">Data da Consulta</label>
+                    <input type="date" id="data" required class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="horario" class="block text-gray-300 font-semibold mb-2">Horários Livres para este dia</label>
+                    <select id="horario" required class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition appearance-none">
+                        <option value="">Selecione uma data primeiro...</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div>
+                <label for="observacoes" class="block text-gray-300 font-semibold mb-2">Observações / Sintomas / Dúvidas</label>
+                <textarea id="observacoes" rows="3" placeholder="Ex: Gostaria de focar mais no ganho de massa magra neste mês..." class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition resize-none"></textarea>
+            </div>
+
+            <div class="pt-4 border-t border-gray-800">
+                <button type="submit" class="w-full bg-green-500 hover:bg-green-400 text-gray-950 font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-green-500/20">
+                    Confirmar Agendamento
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+    const token = localStorage.getItem('token');
+
+    // Escuta quando o paciente escolhe ou muda a data
+    document.getElementById('data').addEventListener('change', async function() {
+        const dataEscolhida = this.value;
+        const selectHorario = document.getElementById('horario');
+
+        // Coloca um aviso visual enquanto vai buscar no Java
+        selectHorario.innerHTML = '<option value="">Carregando horários...</option>';
+
+        try {
+            // Vai até o Spring Boot buscar os horários criados para ESSA data
+            const response = await fetch(`http://localhost:8080/horarios/disponiveis?data=${dataEscolhida}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            const horarios = await response.json();
+            selectHorario.innerHTML = '<option value="">Selecione um horário...</option>';
+
+            // Se o médico não criou nenhum horário para esse dia no banco
+            if (horarios.length === 0) {
+                selectHorario.innerHTML = '<option value="">Nenhum horário disponível nesta data</option>';
+                return;
+            }
+
+            // Se encontrou horários livres, coloca eles dentro do select pro usuário escolher
+            horarios.forEach(h => {
+                selectHorario.innerHTML += `<option value="${h.idHorario}">${h.horario} - ${h.funcionario.usuario.nome}</option>`;
+            });
+
+        } catch (error) {
+            console.error(error);
+            selectHorario.innerHTML = '<option value="">Erro ao carregar horários</option>';
+        }
+    });
+
+    // Envia o agendamento completo para o banco de dados
+    document.getElementById('agendamentoForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const idHorario = document.getElementById('horario').value;
+        const idPaciente = localStorage.getItem('userId');
+
+        if (!idHorario) {
+            alert('Por favor, selecione um horário disponível.');
+            return;
+        }
+
+        if (!idPaciente) {
+            alert('Sessão expirada. Faça login novamente.');
+            window.location.href = '/login.html';
+            return;
+        }
+
+        const formData = {
+            idPaciente: parseInt(idPaciente),
+            idHorario: parseInt(idHorario),
+            idFuncionario: null,
+            dataConsulta: document.getElementById('data').value,
+            horario: null,
+            tipoServico: document.getElementById('servico').value,
+            observacoes: document.getElementById('observacoes').value
+        };
+
+        try {
+            const response = await fetch('http://localhost:8080/agendamentos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert('Consulta agendada com sucesso!');
+                window.location.href = 'inicial.html';
+            } else {
+                const errorData = await response.json();
+                alert('Erro ao agendar: ' + (errorData.mensagem || 'Verifique os dados.'));
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Não foi possível conectar ao servidor.');
+        }
+    });
+</script>
+</body>
+</html>
