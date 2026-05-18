@@ -63,4 +63,14 @@ public class UsuarioController {
             return ResponseEntity.badRequest().body(Map.of("mensagem", e.getMessage()));
         }
     }
+    // 3. NOVO ENDPOINT: Devolve APENAS quem trabalha na clínica (Equipe Médica/Admin)
+    @GetMapping("/funcionarios")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'FUNCIONARIO')")
+    public ResponseEntity<List<UsuarioResponseDTO>> listarApenasEquipe() {
+        // Pega todos e o Java filtra quem NÃO é paciente antes de mandar pra internet
+        List<UsuarioResponseDTO> equipe = usuarioService.listarTodos().stream()
+                .filter(u -> !u.getRole().equals("ROLE_PACIENTE"))
+                .toList();
+        return ResponseEntity.ok(equipe);
+    }
 }
