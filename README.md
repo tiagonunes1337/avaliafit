@@ -45,7 +45,7 @@ A aplicação permite desde a marcação simplificada de consultas até o monito
 
 ### **Front-end**
 * **Estrutura:** HTML5
-* **Estilização:** Tailwind CSS (via CDN)
+* **Estilização:** Tailwind CSS 
 * **Comportamento & Consumo de API:** JavaScript Assíncrono (Vanilla JS com Fetch API)
 
 ---
