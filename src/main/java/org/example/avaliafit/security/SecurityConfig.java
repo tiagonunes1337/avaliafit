@@ -28,14 +28,24 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/login.html", "/cadastro.html",
-                                "/marcar.html", "/inicial.html", "/style.css",
-                                "/img/**", "/*.js", "/*.css", "/listarusuarios.html" , "/editarusuario.html", "/registraravaliacao.html" , "/gerenciarhorarios.html").permitAll() // Adicionar listarusuarios.html aqui
+                        // 1. Arquivos estáticos e telas públicas liberadas (COM O /error)
+                        .requestMatchers("/", "/*.html", "/index.html", "/login.html", "/cadastro.html",
+                                "/marcar.html", "/inicial.html", "/listarusuarios.html",
+                                "/editarusuario.html", "/registraravaliacao.html", "/gerenciarhorarios.html",
+                                "/style.css", "/*.css", "/css/**", "/img/**", "/js/**", "/error").permitAll()
+
+                        // 2. Rota de Login liberada
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/usuarios/**").authenticated() // Alterar para apenas exigir autenticação
+
+                        // 3. REGRAS ESPECÍFICAS PRIMEIRO (O paciente pode ver a PRÓPRIA avaliação)
+                        .requestMatchers(HttpMethod.GET, "/avaliacoes/paciente/*/ultima").hasAnyRole("PACIENTE", "FUNCIONARIO", "GERENTE", "ADMIN")
+
+                        // 4. REGRAS GENÉRICAS DEPOIS
                         .requestMatchers("/avaliacoes/**").hasAnyAuthority("ROLE_FUNCIONARIO", "ROLE_ADMIN", "ROLE_GERENTE")
                         .requestMatchers("/agendamentos/**").hasAnyAuthority("ROLE_PACIENTE", "ROLE_FUNCIONARIO", "ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/avaliacoes/paciente/*/ultima").hasAnyRole("PACIENTE", "FUNCIONARIO", "GERENTE", "ADMIN")
+                        .requestMatchers("/usuarios/**").authenticated()
+
+                        // 5. Qualquer outra coisa exige login
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

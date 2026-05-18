@@ -8,11 +8,7 @@
 </head>
 <body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
 
-<script>
-    if (!localStorage.getItem('token')) {
-        window.location.href = '/login.html';
-    }
-</script>
+
 
 <header class="bg-gray-900 border-b border-green-500 sticky top-0 z-50 p-4">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
@@ -75,33 +71,32 @@
     </div>
 </main>
 
-<script>
-    const token = localStorage.getItem('token');
+<script type="module">
+    import { CONFIG } from './js/config.js';
+    import { StorageManager } from './js/storage-manager.js';
+    import { apiClient } from './js/api-client.js';
 
-    // Escuta quando o paciente escolhe ou muda a data
+    // 1. Proteção de Rota Automática
+    StorageManager.requireAuth();
+
+    // 2. Escuta quando o paciente escolhe ou muda a data
     document.getElementById('data').addEventListener('change', async function() {
         const dataEscolhida = this.value;
         const selectHorario = document.getElementById('horario');
 
-        // Coloca um aviso visual enquanto vai buscar no Java
         selectHorario.innerHTML = '<option value="">Carregando horários...</option>';
 
         try {
-            // Vai até o Spring Boot buscar os horários criados para ESSA data
-            const response = await fetch(`http://localhost:8080/horarios/disponiveis?data=${dataEscolhida}`, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
+            // Busca os horários via apiClient (sem se preocupar com headers ou token)
+            const horarios = await apiClient.get(CONFIG.ENDPOINTS.HORARIOS_DISPONIVEIS(dataEscolhida));
 
-            const horarios = await response.json();
             selectHorario.innerHTML = '<option value="">Selecione um horário...</option>';
 
-            // Se o médico não criou nenhum horário para esse dia no banco
             if (horarios.length === 0) {
                 selectHorario.innerHTML = '<option value="">Nenhum horário disponível nesta data</option>';
                 return;
             }
 
-            // Se encontrou horários livres, coloca eles dentro do select pro usuário escolher
             horarios.forEach(h => {
                 selectHorario.innerHTML += `<option value="${h.idHorario}">${h.horario} - ${h.funcionario.usuario.nome}</option>`;
             });
@@ -112,54 +107,35 @@
         }
     });
 
-    // Envia o agendamento completo para o banco de dados
+    // 3. Envia o agendamento completo
     document.getElementById('agendamentoForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const idHorario = document.getElementById('horario').value;
-        const idPaciente = localStorage.getItem('userId');
+        const idPaciente = StorageManager.getUserId(); // Pegando o ID direto do Manager!
 
         if (!idHorario) {
             alert('Por favor, selecione um horário disponível.');
             return;
         }
 
-        if (!idPaciente) {
-            alert('Sessão expirada. Faça login novamente.');
-            window.location.href = '/login.html';
-            return;
-        }
-
         const formData = {
             idPaciente: parseInt(idPaciente),
             idHorario: parseInt(idHorario),
-            idFuncionario: null,
             dataConsulta: document.getElementById('data').value,
-            horario: null,
             tipoServico: document.getElementById('servico').value,
             observacoes: document.getElementById('observacoes').value
         };
 
         try {
-            const response = await fetch('http://localhost:8080/agendamentos', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify(formData)
-            });
+            // POST enxuto usando o nosso cliente centralizado
+            await apiClient.post(CONFIG.ENDPOINTS.AGENDAMENTOS, formData);
 
-            if (response.ok) {
-                alert('Consulta agendada com sucesso!');
-                window.location.href = 'inicial.html';
-            } else {
-                const errorData = await response.json();
-                alert('Erro ao agendar: ' + (errorData.mensagem || 'Verifique os dados.'));
-            }
+            alert('Consulta agendada com sucesso!');
+            window.location.href = 'inicial.html';
         } catch (error) {
             console.error(error);
-            alert('Não foi possível conectar ao servidor.');
+            alert('Erro ao agendar: ' + (error.message || 'Verifique os dados.'));
         }
     });
 </script>
