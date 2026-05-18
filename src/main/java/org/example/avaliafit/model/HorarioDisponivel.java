@@ -30,4 +30,6 @@ public class HorarioDisponivel {
 
     @Column(nullable = false)
     private boolean disponivel = true;
+
+
 }
