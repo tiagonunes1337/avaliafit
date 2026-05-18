@@ -36,7 +36,7 @@ Este projeto está sendo desenvolvido como parte de estudos aprofundados em **En
 * **Framework Principal:** Spring Boot 3
 * **Segurança:** Spring Security & JWT (Json Web Token)
 * **Persistência de Dados:** Spring Data JPA / Hibernate
-* **Gerenciador de Dependências:** Maven
+* **Gerenciador de Dependências:** Gradle
 
 ### Banco de Dados
 * **SGBD:** MySQL Server (Porta 3306)
