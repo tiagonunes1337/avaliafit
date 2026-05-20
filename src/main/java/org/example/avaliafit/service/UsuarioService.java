@@ -86,7 +86,11 @@ public class UsuarioService {
     }
 
     public void deletar(Integer id) {
-        usuarioRepository.deleteById(id);
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado ou já removido."));
+
+        // Apaga diretamente o objeto que já está na memória
+        usuarioRepository.delete(usuario);
     }
 
     // converte entidade → DTO
@@ -102,7 +106,7 @@ public class UsuarioService {
     }
     @Transactional
     public UsuarioResponseDTO atualizar(Integer id, UsuarioRequestDTO dto) {
-        // Busca o usuário no banco, se não achar, explode erro
+        // Busca o usuário no banco, se não achar, acusa erro
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 

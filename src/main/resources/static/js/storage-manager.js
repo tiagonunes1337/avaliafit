@@ -1,33 +1,24 @@
 import { CONFIG } from './config.js';
 
 export class StorageManager {
-    static setToken(token) { localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, token); }
-    static getToken() { return localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN); }
-
-    static setRole(role) { localStorage.setItem(CONFIG.STORAGE_KEYS.ROLE, role); }
-    static getRole() { return localStorage.getItem(CONFIG.STORAGE_KEYS.ROLE); }
-
-    static setUserId(id) { localStorage.setItem(CONFIG.STORAGE_KEYS.USER_ID, id); }
+    static getToken()  { return localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN); }
+    static getRole()   { return localStorage.getItem(CONFIG.STORAGE_KEYS.ROLE); }
     static getUserId() { return localStorage.getItem(CONFIG.STORAGE_KEYS.USER_ID); }
+    static getName()   { return localStorage.getItem(CONFIG.STORAGE_KEYS.USER_NAME); }
 
-    // Guarda tudo de uma vez ao fazer login
-    static saveLoginData(token, role, id) {
-        this.setToken(token);
-        this.setRole(role);
-        this.setUserId(id);
+    /** Persiste todos os dados de sessão após o login */
+    static saveLoginData(token, role, id, nome) {
+        localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN,     token);
+        localStorage.setItem(CONFIG.STORAGE_KEYS.ROLE,      role);
+        localStorage.setItem(CONFIG.STORAGE_KEYS.USER_ID,   id);
+        localStorage.setItem(CONFIG.STORAGE_KEYS.USER_NAME, nome);
     }
 
-    // Limpa a sessão
-    static clear() {
-        localStorage.clear();
-    }
-
-    // Retorna 'true' se houver um token
     static isAuthenticated() {
         return !!this.getToken();
     }
 
-    // Proteção de rotas: se não estiver logado, atira para o login
+    /** Redireciona para o login se não houver sessão ativa */
     static requireAuth() {
         if (!this.isAuthenticated()) {
             window.location.href = '/login.html';
@@ -36,9 +27,9 @@ export class StorageManager {
         return true;
     }
 
-    // Limpa tudo e volta à estaca zero
+    /** Limpa a sessão e redireciona para o login */
     static logout() {
-        this.clear();
+        localStorage.clear();
         window.location.href = '/login.html';
     }
 }

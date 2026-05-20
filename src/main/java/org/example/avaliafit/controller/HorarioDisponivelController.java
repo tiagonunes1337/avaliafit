@@ -32,8 +32,25 @@ public class HorarioDisponivelController {
     public ResponseEntity<?> criarHorario(@RequestBody HorarioDisponivelRequestDTO dto) {
         try {
             HorarioDisponivelResponseDTO response = horarioDisponivelService.criarHorario(dto);
-            // Retorna um JSON amigável com a mensagem de sucesso
             return ResponseEntity.ok().body(Map.of("mensagem", "Horário criado com sucesso!", "id", response.getIdHorario()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("mensagem", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'FUNCIONARIO')")
+    public ResponseEntity<Void> deletarHorario(@PathVariable Integer id) {
+        horarioDisponivelService.deletarHorario(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'FUNCIONARIO')")
+    public ResponseEntity<?> atualizarHorario(@PathVariable Integer id, @RequestBody HorarioDisponivelRequestDTO dto) {
+        try {
+            return ResponseEntity.ok(horarioDisponivelService.atualizarHorario(id, dto));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("mensagem", e.getMessage()));
         }

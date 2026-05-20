@@ -39,27 +39,32 @@
     </form>
 </main>
 
-<script>
+<script type="module">
+    import { CONFIG } from './js/config.js';
+    import { StorageManager } from './js/storage-manager.js';
+
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const email = document.getElementById('email').value;
+        const email    = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
-        const response = await fetch('/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, senha: password })
-        });
+        try {
+            const response = await fetch(CONFIG.API_BASE_URL + CONFIG.ENDPOINTS.AUTH_LOGIN, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, senha: password })
+            });
 
-        if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('role', data.role);
-            localStorage.setItem('userId', data.id);
-            localStorage.setItem('nome', data.nome);
-            window.location.href = '/inicial.html';
-        } else {
-            alert('Email ou senha inválidos');
+            if (response.ok) {
+                const data = await response.json();
+                StorageManager.saveLoginData(data.token, data.role, data.id, data.nome);
+                window.location.href = '/inicial.html';
+            } else {
+                alert('E-mail ou senha inválidos.');
+            }
+        } catch (error) {
+            console.error('Erro no login:', error);
+            alert('Não foi possível conectar ao servidor.');
         }
     });
 </script>

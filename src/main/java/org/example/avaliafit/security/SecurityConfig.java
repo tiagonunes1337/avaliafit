@@ -32,7 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/*.html", "/index.html", "/login.html", "/cadastro.html",
                                 "/marcar.html", "/inicial.html", "/listarusuarios.html",
                                 "/editarusuario.html", "/registraravaliacao.html", "/gerenciarhorarios.html",
-                                "/style.css", "/*.css", "/css/**", "/img/**", "/js/**", "/error").permitAll()
+                                "/static/style.css", "/*.css", "/css/**", "/img/**", "/js/**", "/error").permitAll()
 
                         // 2. Rota de Login liberada
                         .requestMatchers("/auth/**").permitAll()

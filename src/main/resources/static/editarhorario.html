@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Editar Horário</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
+
+<header class="bg-gray-900 border-b-4 border-blue-600 sticky top-0 z-50 p-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <img src="img/logoavaliafit.png" alt="Avalia FIT Logo" class="w-28 h-auto grayscale brightness-200">
+            <span class="bg-blue-600/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-blue-600/30">
+                Área Restrita
+            </span>
+        </div>
+        <nav class="hidden md:flex items-center gap-6 text-gray-300">
+            <a href="inicial.html" class="hover:text-white transition font-medium">Dashboard</a>
+            <a href="listarhorario.html" class="hover:text-white transition font-medium">Agenda</a>
+            <a href="cadastro.html" class="hover:text-white transition font-medium">Novo Cadastro</a>
+            <a href="listarusuarios.html" class="hover:text-white transition font-medium">Lista de Usuários</a>
+            <a href="#" id="btnSair" class="text-red-400 hover:text-red-300 transition font-medium text-sm ml-4">Sair do Painel</a>
+        </nav>
+    </div>
+</header>
+
+<main class="flex-grow flex items-center justify-center p-6">
+    <div class="w-full max-w-xl bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl">
+        <h1 class="text-2xl font-bold text-white mb-2">Editar Horário Disponível</h1>
+        <p class="text-gray-400 mb-8">Modifique as informações da vaga de atendimento selecionada.</p>
+
+        <form id="editHorarioForm" class="space-y-6">
+            <div>
+                <label for="idFuncionario" class="block text-gray-300 font-semibold mb-2">ID do Profissional (Funcionário)</label>
+                <input type="number" id="idFuncionario" required
+                       class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label for="data" class="block text-gray-300 font-semibold mb-2">Data</label>
+                    <input type="date" id="data" required
+                           class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div>
+                    <label for="horario" class="block text-gray-300 font-semibold mb-2">Horário</label>
+                    <input type="time" id="horario" required
+                           class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-gray-800 flex gap-4">
+                <a href="listarhorario.html"
+                   class="w-1/2 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg text-center transition border border-gray-700">
+                    Cancelar
+                </a>
+                <button type="submit"
+                        class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg shadow-blue-600/20">
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script type="module">
+    import { CONFIG } from './js/config.js';
+    import { StorageManager } from './js/storage-manager.js';
+    import { apiClient } from './js/api-client.js';
+
+    // 1. Defesa de Rota
+    StorageManager.requireAuth();
+    const role = StorageManager.getRole();
+    if (role === 'ROLE_PACIENTE') {
+        alert('Acesso Negado: Área restrita para funcionários.');
+        window.location.href = '/inicial.html';
+    }
+
+    // 2. Logout
+    document.getElementById('btnSair').addEventListener('click', (e) => {
+        e.preventDefault();
+        StorageManager.logout();
+    });
+
+    // 3. Pré-preencher com os dados passados via URL
+    const urlParams     = new URLSearchParams(window.location.search);
+    const idHorario     = urlParams.get('id');
+    const dataUrl       = urlParams.get('data');
+    const horarioUrl    = urlParams.get('horario');
+    const idFuncUrl     = urlParams.get('idFuncionario');
+
+    if (!idHorario) {
+        alert('Nenhum ID de horário foi fornecido.');
+        window.location.href = '/listarhorario.html';
+    }
+
+    if (dataUrl)    document.getElementById('data').value          = dataUrl;
+    if (horarioUrl) document.getElementById('horario').value       = horarioUrl.substring(0, 5);
+    if (idFuncUrl)  document.getElementById('idFuncionario').value = idFuncUrl;
+
+    // 4. Enviar PUT ao salvar
+    document.getElementById('editHorarioForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = {
+            idFuncionario: parseInt(document.getElementById('idFuncionario').value),
+            data:          document.getElementById('data').value,
+            horario:       document.getElementById('horario').value + ':00'
+        };
+
+        try {
+            await apiClient.put(`${CONFIG.ENDPOINTS.HORARIOS}/${idHorario}`, formData);
+            alert('Horário atualizado com sucesso!');
+            window.location.href = '/listarhorario.html';
+        } catch (error) {
+            console.error('Falha na atualização do horário:', error);
+            alert(error.message || 'Não foi possível atualizar o horário.');
+        }
+    });
+</script>
+</body>
+</html>
