@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CardapioRefeicao {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idRefeicao;
@@ -20,7 +21,22 @@ public class CardapioRefeicao {
     private PlanoNutricional planoNutricional;
 
     @Column(nullable = false)
-    private String nomeRefeicao;
+    private String nomeRefeicao; // Ex: "Café da Manhã", "Almoço"
 
-    private String descricao;
+    @Column(columnDefinition = "TEXT")
+    private String descricao; // Ex: "2 ovos mexidos, 1 fatia de pão integral, 1 xícara de café"
+
+    // --- NOVOS CAMPOS PARA O CÁLCULO MATEMÁTICO ---
+
+    @Column(nullable = false)
+    private Double calorias; // Ex: 350.5
+
+    @Column(nullable = false)
+    private Double proteinas; // Em gramas. Ex: 25.0
+
+    @Column(nullable = false)
+    private Double carboidratos; // Em gramas. Ex: 30.0
+
+    @Column(nullable = false)
+    private Double gorduras; // Em gramas. Ex: 12.0
 }
