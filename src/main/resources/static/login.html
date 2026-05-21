@@ -39,48 +39,6 @@
     </form>
 </main>
 
-<script type="module">
-    import { CONFIG } from './js/config.js';
-    import { StorageManager } from './js/storage-manager.js';
-
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const email    = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-
-        try {
-            const response = await fetch(CONFIG.API_BASE_URL + CONFIG.ENDPOINTS.AUTH_LOGIN, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, senha: password })
-            });
-
-            // SÓ EXISTE UM BLOCO IF AGORA!
-            if (response.ok) {
-                const data = await response.json();
-
-                // 1. A NOVA BARREIRA DE SEGURANÇA
-                const hostAtual = window.location.hostname;
-                const isLocal = hostAtual === 'localhost' || hostAtual === '127.0.0.1';
-                const isAdmin = data.role === 'ROLE_ADMIN' || data.role === 'ADMIN';
-
-                // Se for Admin e NÃO estiver no servidor local, bloqueia imediatamente!
-                if (isAdmin && !isLocal) {
-                    alert('Acesso negado: Administradores só podem fazer login a partir do servidor físico.');
-                    return; // Interrompe o código aqui, a pessoa não vai para lugar nenhum
-                }
-
-                // 2. Se for Paciente (ou se for Admin no PC certo), o fluxo continua normal
-                StorageManager.saveLoginData(data.token, data.role, data.id, data.nome);
-                window.location.href = '/inicial.html';
-            } else {
-                alert('E-mail ou senha inválidos.');
-            }
-        } catch (error) {
-            console.error('Erro no login:', error);
-            alert('Não foi possível conectar ao servidor.');
-        }
-    });
-</script>
+<script type="module" src="js/pages/login.js"></script>
 </body>
 </html>

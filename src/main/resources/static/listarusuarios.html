@@ -8,24 +8,6 @@
 </head>
 <body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
 
-<header class="bg-gray-900 border-b-4 border-blue-600 sticky top-0 z-50 p-4">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <div class="flex items-center gap-4">
-            <img src="img/logoavaliafit.png" alt="Avalia FIT Logo" class="w-28 h-auto grayscale brightness-200">
-            <span class="bg-blue-600/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-blue-600/30">
-                Área Restrita
-            </span>
-        </div>
-        <nav class="hidden md:flex items-center gap-6 text-gray-300">
-            <a href="inicial.html" class="hover:text-white transition font-medium">Dashboard</a>
-            <a href="gerenciarhorarios.html" class="hover:text-white transition font-medium">Agenda</a>
-            <a href="cadastro.html" class="hover:text-white transition font-medium">Novo Cadastro</a>
-            <a href="listarusuarios.html" class="text-blue-400 font-bold border-b-2 border-blue-500 pb-1">Lista de Usuários</a>
-            <a href="#" id="btnSair" class="text-red-400 hover:text-red-300 transition font-medium text-sm ml-4">Sair do Painel</a>
-        </nav>
-    </div>
-</header>
-
 <main class="flex-grow p-6 md:p-12">
     <div class="max-w-6xl mx-auto bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl">
 
@@ -57,91 +39,6 @@
     </div>
 </main>
 
-<script type="module">
-    import { CONFIG } from './js/config.js';
-    import { StorageManager } from './js/storage-manager.js';
-    import { apiClient } from './js/api-client.js';
-
-    // 1. Defesa de Rota
-    StorageManager.requireAuth();
-    const role = StorageManager.getRole();
-    if (role === 'ROLE_PACIENTE') {
-        alert('Acesso Negado: Área restrita para funcionários.');
-        window.location.href = '/inicial.html';
-    }
-
-    // 2. Logout
-    document.getElementById('btnSair').addEventListener('click', (e) => {
-        e.preventDefault();
-        StorageManager.logout();
-    });
-
-    function getColorRole(r) {
-        if (r === 'ROLE_ADMIN')      return 'bg-red-500/20 text-red-400 border border-red-500/30';
-        if (r === 'ROLE_GERENTE')    return 'bg-orange-500/20 text-orange-400 border border-orange-500/30';
-        if (r === 'ROLE_FUNCIONARIO')return 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
-        return 'bg-green-500/20 text-green-400 border border-green-500/30';
-    }
-
-    async function carregarUsuarios() {
-        const endpoint = role === 'ROLE_FUNCIONARIO'
-            ? CONFIG.ENDPOINTS.USUARIOS_PACIENTES
-            : CONFIG.ENDPOINTS.USUARIOS;
-
-        try {
-            const usuarios = await apiClient.get(endpoint);
-            const tbody = document.getElementById('tabela-usuarios');
-            tbody.innerHTML = '';
-
-            if (usuarios.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-500">Nenhum usuário encontrado.</td></tr>`;
-                return;
-            }
-
-            const podeExcluir = role === 'ROLE_ADMIN' || role === 'ROLE_GERENTE';
-
-            usuarios.forEach(user => {
-                const botaoExcluir = podeExcluir
-                    ? `<button onclick="deletarUsuario(${user.id})" class="text-red-500 hover:text-red-400 font-medium hover:underline transition">Excluir</button>`
-                    : `<span class="text-gray-600 text-sm">Sem permissão</span>`;
-
-                tbody.innerHTML += `
-                    <tr class="border-b border-gray-800/50 hover:bg-gray-800/40 transition">
-                        <td class="p-4 text-white font-medium">${user.nome}</td>
-                        <td class="p-4 text-gray-400">${user.email}</td>
-                        <td class="p-4">
-                            <span class="px-3 py-1 rounded-full text-xs font-bold ${getColorRole(user.role)}">
-                                ${user.role.replace('ROLE_', '')}
-                            </span>
-                        </td>
-                        <td class="p-4 text-center">
-                            <a href="editarusuario.html?id=${user.id}"
-                               class="text-blue-400 hover:text-blue-300 font-medium hover:underline transition mr-4">Editar</a>
-                            ${botaoExcluir}
-                        </td>
-                    </tr>
-                `;
-            });
-        } catch (error) {
-            console.error('Erro ao carregar usuários:', error);
-            alert('Falha de conexão. O servidor está rodando?');
-        }
-    }
-
-    window.deletarUsuario = async function(id) {
-        if (!confirm('Tem certeza que deseja excluir este usuário? Esta ação é irreversível.')) return;
-
-        try {
-            await apiClient.delete(`${CONFIG.ENDPOINTS.USUARIOS}/${id}`);
-            alert('Usuário excluído com sucesso!');
-            carregarUsuarios();
-        } catch (error) {
-            console.error('Erro ao excluir usuário:', error);
-            alert('Erro ao excluir usuário. Verifique suas permissões.');
-        }
-    };
-
-    carregarUsuarios();
-</script>
+<script type="module" src="js/pages/listarusuarios.js"></script>
 </body>
 </html>
