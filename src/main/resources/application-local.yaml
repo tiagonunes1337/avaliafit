@@ -19,5 +19,5 @@ server:
   port: 8080
 
 jwt:
-  secret: avaliafit-secret-key-2026-super-segura-aqui
+  secret: ${JWT_SECRET:chave_padrao_para_teste}
   expiration: 86400000

@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -12,6 +14,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlanoNutricional {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idPlano;
@@ -25,20 +28,29 @@ public class PlanoNutricional {
     private Funcionario funcionario;
 
     @Column(nullable = false)
-    private int kcalDiario;
+    private Double kcalDiario;
 
     @Column(nullable = false)
-    private int proteinas;
+    private Double proteinas;
 
     @Column(nullable = false)
-    private int carboidratos;
+    private Double carboidratos;
 
     @Column(name = "gorduras", nullable = false)
-    private int gorduras;
+    private Double gorduras;
 
     @Column(nullable = false)
     private LocalDate dataInicio;
 
     @Column(nullable = false)
     private boolean ativo = true;
+
+    @Column(nullable = false)
+    private Double pesoObjetivo; // Ex: 70.0
+
+    @Column(nullable = false)
+    private Double metaAguaLitros; // Ex: 2.0 ou 2.5
+
+    @OneToMany(mappedBy = "planoNutricional", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CardapioRefeicao> refeicoes = new ArrayList<>();
 }

@@ -6,11 +6,9 @@ import org.example.avaliafit.dto.AvaliacaoRequestDTO;
 import org.example.avaliafit.dto.AvaliacaoResponseDTO;
 import org.example.avaliafit.model.Agendamento;
 import org.example.avaliafit.model.Avaliacao;
-import org.example.avaliafit.model.Funcionario;
 import org.example.avaliafit.model.Paciente;
 import org.example.avaliafit.repository.AgendamentoRepository;
 import org.example.avaliafit.repository.AvaliacaoRepository;
-import org.example.avaliafit.repository.FuncionarioRepository;
 import org.example.avaliafit.repository.PacienteRepository;
 import org.springframework.stereotype.Service;
 
@@ -24,34 +22,29 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AvaliacaoService {
 
-    private final AvaliacaoRepository avaliacaoRepository;
-    private final PacienteRepository pacienteRepository;
-    private final FuncionarioRepository funcionarioRepository;
+    private final AvaliacaoRepository   avaliacaoRepository;
+    private final PacienteRepository    pacienteRepository;
     private final AgendamentoRepository agendamentoRepository;
 
+    // ── CREATE ────────────────────────────────────────────────────────────────
     @Transactional
     public AvaliacaoResponseDTO registrar(AvaliacaoRequestDTO dto) {
 
         Agendamento agendamento = agendamentoRepository.findById(dto.getIdAgendamento())
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado"));
-
-        Paciente paciente = agendamento.getPaciente();
-        Funcionario funcionario = agendamento.getFuncionario();
+                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
 
         if (agendamento.getAvaliacao() != null) {
             throw new RuntimeException("Este agendamento já possui uma avaliação registrada.");
         }
-
         if (dto.getAltura() == null || dto.getAltura().compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("A altura deve ser maior que zero.");
         }
 
-        BigDecimal alturaQuadrado = dto.getAltura().multiply(dto.getAltura());
-        BigDecimal imc = dto.getPeso().divide(alturaQuadrado, 2, RoundingMode.HALF_UP);
+        BigDecimal imc = calcularImc(dto.getPeso(), dto.getAltura());
 
         Avaliacao avaliacao = new Avaliacao();
-        avaliacao.setPaciente(paciente);
-        avaliacao.setFuncionario(funcionario);
+        avaliacao.setPaciente(agendamento.getPaciente());
+        avaliacao.setFuncionario(agendamento.getFuncionario());
         avaliacao.setDataAvaliacao(LocalDateTime.now());
         avaliacao.setPeso(dto.getPeso());
         avaliacao.setAltura(dto.getAltura());
@@ -63,32 +56,52 @@ public class AvaliacaoService {
 
         avaliacaoRepository.save(avaliacao);
 
+        // Marca o agendamento como avaliado
+        agendamento.setStatus("avaliado");
+        agendamentoRepository.save(agendamento);
+
         return toResponseDTO(avaliacao);
     }
 
-    private AvaliacaoResponseDTO toResponseDTO(Avaliacao avaliacao) {
-        AvaliacaoResponseDTO response = new AvaliacaoResponseDTO();
-        response.setIdAvaliacao(avaliacao.getIdAvaliacao());
-        response.setNomePaciente(avaliacao.getPaciente().getUsuario().getNome());
-        response.setNomeFuncionario(avaliacao.getFuncionario().getUsuario().getNome());
-        response.setDataAvaliacao(avaliacao.getDataAvaliacao());
-        response.setPeso(avaliacao.getPeso());
-        response.setAltura(avaliacao.getAltura());
-        response.setImc(avaliacao.getImc());
-        response.setPercentualGordura(avaliacao.getPercentualGordura());
-        response.setMassaMuscular(avaliacao.getMassaMuscular());
-        response.setObservacoes(avaliacao.getObservacoes());
+    // ── UPDATE ────────────────────────────────────────────────────────────────
+    @Transactional
+    public AvaliacaoResponseDTO atualizar(Integer idAvaliacao, AvaliacaoRequestDTO dto) {
+        Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)
+                .orElseThrow(() -> new RuntimeException("Avaliação não encontrada."));
 
-        if (avaliacao.getAgendamento() != null) {
-            response.setIdAgendamento(avaliacao.getAgendamento().getIdAgendamento());
+        if (dto.getAltura() == null || dto.getAltura().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("A altura deve ser maior que zero.");
         }
-        return response;
+
+        avaliacao.setPeso(dto.getPeso());
+        avaliacao.setAltura(dto.getAltura());
+        avaliacao.setImc(calcularImc(dto.getPeso(), dto.getAltura()));
+        avaliacao.setPercentualGordura(dto.getPercentualGordura());
+        avaliacao.setMassaMuscular(dto.getMassaMuscular());
+        avaliacao.setObservacoes(dto.getObservacoes());
+
+        return toResponseDTO(avaliacaoRepository.save(avaliacao));
     }
 
-    // 1. Busca apenas a ÚLTIMA avaliação (a mais recente) usando o ID do Usuário
+    // ── DELETE ────────────────────────────────────────────────────────────────
+    @Transactional
+    public void deletar(Integer idAvaliacao) {
+        Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)
+                .orElseThrow(() -> new RuntimeException("Avaliação não encontrada."));
+
+        // Reabre o agendamento para que possa ser reavaliado
+        if (avaliacao.getAgendamento() != null) {
+            agendamento(avaliacao).setStatus("agendado");
+            agendamentoRepository.save(agendamento(avaliacao));
+        }
+
+        avaliacaoRepository.delete(avaliacao);
+    }
+
+    // ── READ: última avaliação ────────────────────────────────────────────────
     public AvaliacaoResponseDTO buscarUltimaAvaliacao(Integer idUsuario) {
         Paciente paciente = pacienteRepository.findByUsuario_IdUsuario(idUsuario)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado para este usuário"));
+                .orElseThrow(() -> new RuntimeException("Paciente não encontrado."));
 
         return avaliacaoRepository.findByPaciente(paciente)
                 .stream()
@@ -97,14 +110,64 @@ public class AvaliacaoService {
                 .orElseThrow(() -> new RuntimeException("Nenhuma avaliação encontrada para este paciente."));
     }
 
-    // 2. Lista TODAS as avaliações de um paciente (Histórico) usando o ID do Usuário
+    // ── READ: histórico ───────────────────────────────────────────────────────
     public List<AvaliacaoResponseDTO> listarPorPaciente(Integer idUsuario) {
         Paciente paciente = pacienteRepository.findByUsuario_IdUsuario(idUsuario)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado para este usuário"));
+                .orElseThrow(() -> new RuntimeException("Paciente não encontrado."));
 
         return avaliacaoRepository.findByPaciente(paciente)
                 .stream()
+                .sorted(Comparator.comparing(Avaliacao::getDataAvaliacao).reversed())
                 .map(this::toResponseDTO)
                 .toList();
+    }
+
+    // ── HELPERS ───────────────────────────────────────────────────────────────
+    private Agendamento agendamento(Avaliacao av) {
+        return av.getAgendamento();
+    }
+
+    private BigDecimal calcularImc(BigDecimal peso, BigDecimal altura) {
+        return peso.divide(altura.multiply(altura), 2, RoundingMode.HALF_UP);
+    }
+
+    private AvaliacaoResponseDTO toResponseDTO(Avaliacao av) {
+        AvaliacaoResponseDTO dto = new AvaliacaoResponseDTO();
+        dto.setIdAvaliacao(av.getIdAvaliacao());
+        dto.setNomePaciente(av.getPaciente().getUsuario().getNome());
+        dto.setNomeFuncionario(av.getFuncionario().getUsuario().getNome());
+        dto.setDataAvaliacao(av.getDataAvaliacao());
+        dto.setPeso(av.getPeso());
+        dto.setAltura(av.getAltura());
+        dto.setImc(av.getImc());
+        dto.setPercentualGordura(av.getPercentualGordura());
+        dto.setMassaMuscular(av.getMassaMuscular());
+        dto.setObservacoes(av.getObservacoes());
+        if (av.getAgendamento() != null) dto.setIdAgendamento(av.getAgendamento().getIdAgendamento());
+
+        // Classificação e cor do IMC calculadas aqui, prontas para o front-end
+        double imc = av.getImc().doubleValue();
+        dto.setClassificacaoImc(classificarImc(imc));
+        dto.setCorImc(corImc(imc));
+
+        return dto;
+    }
+
+    private String classificarImc(double imc) {
+        if (imc < 18.5) return "Abaixo do peso";
+        if (imc < 25.0) return "Peso normal";
+        if (imc < 30.0) return "Sobrepeso";
+        if (imc < 35.0) return "Obesidade grau I";
+        if (imc < 40.0) return "Obesidade grau II";
+        return "Obesidade grau III";
+    }
+
+    // Cores em string para facilitar o uso no Tailwind via JS
+    private String corImc(double imc) {
+        if (imc < 18.5) return "blue";
+        if (imc < 25.0) return "green";
+        if (imc < 30.0) return "yellow";
+        if (imc < 35.0) return "orange";
+        return "red";
     }
 }

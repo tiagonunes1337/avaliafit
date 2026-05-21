@@ -6,10 +6,30 @@ import java.time.LocalDate;
 public class PlanoNutricionalResponseDTO {
 
     private Integer idPlano;
-    private int kcalDiario;
-    private int proteinas;
-    private int carboidratos;
-    private int gorduras;
+    private double kcalDiario;
+    private double proteinas;
+    private double carboidratos;
+    private double gorduras;
     private LocalDate dataInicio;
     private boolean ativo;
+    private Double pesoObjetivo;
+    private Double metaAguaLitros;
+    private PacienteInfoDTO paciente;
+    private ProfissionalInfoDTO profissional;
+
+
+    @Data
+    public static class PacienteInfoDTO {
+        private Integer idUsuario; // ID do Usuário para facilitar a busca no Front-End
+        private String nome;
+
+    }
+
+    @Data
+    public static class ProfissionalInfoDTO {
+        private Integer idFuncionario;
+        private String nome;
+    }
+
+
 }

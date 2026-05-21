@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class HorarioDisponivelService {
 
-    // CORREÇÃO: Removido o static daqui
     private final HorarioDisponivelRepository horarioDisponivelRepository;
     private final FuncionarioRepository funcionarioRepository;
 

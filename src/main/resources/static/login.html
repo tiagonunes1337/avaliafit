@@ -55,8 +55,22 @@
                 body: JSON.stringify({ email, senha: password })
             });
 
+            // SÓ EXISTE UM BLOCO IF AGORA!
             if (response.ok) {
                 const data = await response.json();
+
+                // 1. A NOVA BARREIRA DE SEGURANÇA
+                const hostAtual = window.location.hostname;
+                const isLocal = hostAtual === 'localhost' || hostAtual === '127.0.0.1';
+                const isAdmin = data.role === 'ROLE_ADMIN' || data.role === 'ADMIN';
+
+                // Se for Admin e NÃO estiver no servidor local, bloqueia imediatamente!
+                if (isAdmin && !isLocal) {
+                    alert('Acesso negado: Administradores só podem fazer login a partir do servidor físico.');
+                    return; // Interrompe o código aqui, a pessoa não vai para lugar nenhum
+                }
+
+                // 2. Se for Paciente (ou se for Admin no PC certo), o fluxo continua normal
                 StorageManager.saveLoginData(data.token, data.role, data.id, data.nome);
                 window.location.href = '/inicial.html';
             } else {

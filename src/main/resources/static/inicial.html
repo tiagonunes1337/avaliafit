@@ -8,143 +8,371 @@
 </head>
 <body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
 
+<!-- ═══════════════════════════════════════════════════════ HEADER -->
 <header class="bg-gray-900 border-b border-green-500 sticky top-0 z-50 p-4">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <div class="flex items-center gap-2">
-            <img src="img/logoavaliafit.png" alt="Avalia FIT Logo" class="w-28 h-auto">
-        </div>
+        <img src="img/logoavaliafit.png" alt="Avalia FIT" class="w-28 h-auto">
 
-        <nav class="hidden md:flex items-center gap-8 text-gray-300">
-            <a href="#seuIMC" class="hover:text-green-400 transition font-medium">Dashboard</a>
-            <a href="#suaAlimentacao" class="hover:text-green-400 transition font-medium">Dieta e Treino</a>
-            <a href="listarhorario.html" class="hover:text-white transition font-medium">Agenda</a>
-            <a href="cadastro.html" id="menuCadastro" class="hover:text-green-400 transition font-medium hidden">Cadastro de Usuário</a>
-            <a href="listarusuarios.html" id="menuLista" class="hover:text-green-400 transition font-medium hidden">Lista de Usuário</a>
-            <a href="gerenciarhorarios.html" id="menuHorarios" class="hover:text-green-400 transition font-medium hidden">Criar Horários</a>
-            <a href="registraravaliacao.html" id="menuRegistrar" class="border border-green-500 text-green-500 hover:bg-green-500 hover:text-gray-950 px-4 py-2 rounded-md transition font-bold text-sm hidden">Registrar avaliação</a>
+        <nav class="hidden md:flex items-center gap-6 text-gray-300 text-sm">
+            <a href="#secaoIMC"           class="hover:text-green-400 transition font-medium">Composição</a>
+            <a href="#secaoNutricao"      class="hover:text-green-400 transition font-medium">Nutrição</a>
+            <a href="listarhorario.html"  class="hover:text-green-400 transition font-medium">Agenda</a>
 
-            <a href="marcar.html" id="menuMarcar" class="border border-green-500 text-green-500 hover:bg-green-500 hover:text-gray-950 px-4 py-2 rounded-md transition font-bold text-sm hidden">Nova Consulta</a>
+            <!-- Equipe -->
+            <a href="cadastro.html"          id="menuCadastro"  class="hover:text-green-400 transition font-medium hidden">Cadastro</a>
+            <a href="listarusuarios.html"     id="menuLista"     class="hover:text-green-400 transition font-medium hidden">Usuários</a>
+            <a href="gerenciarhorarios.html"  id="menuHorarios"  class="hover:text-green-400 transition font-medium hidden">Criar Horários</a>
+            <a href="registraravaliacao.html" id="menuRegistrar"
+               class="border border-green-500 text-green-500 hover:bg-green-500 hover:text-gray-950 px-4 py-1.5 rounded-md transition font-bold hidden">
+                Registrar Avaliação
+            </a>
 
-            <a href="#" id="btnSair" class="text-red-400 hover:text-red-300 transition font-medium text-sm ml-4">Sair</a>
+            <!-- Paciente -->
+            <a href="marcar.html" id="menuMarcar"
+               class="border border-green-500 text-green-500 hover:bg-green-500 hover:text-gray-950 px-4 py-1.5 rounded-md transition font-bold hidden">
+                Nova Consulta
+            </a>
+
+            <a href="#" id="btnSair" class="text-red-400 hover:text-red-300 transition font-medium ml-2">Sair</a>
         </nav>
 
-        <div class="w-10 h-10 bg-gray-800 rounded-full border-2 border-green-500 overflow-hidden">
-            <img src="https://ui-avatars.com/api/?name=Usuario+Fit&background=1f2937&color=22c55e" alt="Avatar">
+        <div class="w-9 h-9 bg-gray-800 rounded-full border-2 border-green-500 overflow-hidden flex-shrink-0">
+            <img id="avatarImg" src="https://ui-avatars.com/api/?name=U&background=1f2937&color=22c55e" alt="Avatar" class="w-full h-full object-cover">
         </div>
     </div>
 </header>
 
-<main class="flex-grow p-6 md:p-12">
-    <div class="max-w-7xl mx-auto">
+<!-- ═══════════════════════════════════════════════════════ MAIN -->
+<main class="flex-grow p-6 md:p-10">
+    <div class="max-w-5xl mx-auto space-y-6">
 
-        <div class="mb-8 border-b border-gray-800 pb-4">
-            <h1 class="text-3xl font-bold text-white">Bem-vindo de volta!</h1>
-            <p class="text-gray-400 mt-2">Última avaliação: <span id="dataAvaliacao" class="text-green-500">Buscando...</span></p>
+        <!-- Cabeçalho do painel -->
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-4 border-b border-gray-800">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Olá, <span id="nomeUsuario">...</span>!</h1>
+                <p class="text-gray-400 text-sm mt-1">
+                    Última avaliação:
+                    <span id="dataAvaliacao" class="text-green-400 font-semibold">carregando...</span>
+                </p>
+            </div>
+            <!-- Badge IMC -->
+            <span id="badgeImc" class="hidden self-start sm:self-auto text-xs font-bold px-4 py-1.5 rounded-full border"></span>
         </div>
 
-        <section id="seuIMC" class="bg-gray-900 p-6 rounded-xl border border-gray-800 shadow-lg mb-6 space-y-4">
-            <h2 class="text-xl font-bold text-white mb-2">Composição Corporal</h2>
-            <div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center">
-                <span class="text-gray-400">Peso Praticado</span>
-                <span id="pesoAtual" class="text-xl font-bold text-white">-- kg</span>
-            </div>
-            <div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center border-l-4 border-green-500">
-                <span class="text-gray-400">Gordura Corporal</span>
-                <span id="gorduraAtual" class="text-xl font-bold text-green-500">-- %</span>
-            </div>
-            <div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center border-l-4 border-blue-500">
-                <span class="text-gray-400">Massa Magra</span>
-                <span id="massaMagraAtual" class="text-xl font-bold text-blue-500">-- kg</span>
-            </div>
-        </section>
+        <!-- ════════════════════════════════════ COMPOSIÇÃO CORPORAL -->
+        <section id="secaoIMC" class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-lg">
+            <h2 class="text-lg font-bold text-white mb-5">Composição Corporal</h2>
 
-        <section id="suaAlimentacao" class="bg-gray-900 p-6 rounded-xl border border-gray-800 shadow-lg flex flex-col justify-between">
-            <div>
-                <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    Plano Nutricional Diário
-                </h2>
-                <p class="text-gray-400 mb-6">Baseado na sua última bioimpedância, sua ingestão alvo é de <strong class="text-white">2.450 kcal/dia</strong>.</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 
-                <div class="grid grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gray-800 p-3 rounded text-center">
-                        <span class="block text-sm text-gray-500 mb-1">Proteínas</span>
-                        <span class="font-bold text-white">160g</span>
+                <!-- Peso -->
+                <div class="bg-gray-800 rounded-xl p-4">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Peso</p>
+                    <p id="pesoAtual" class="text-2xl font-extrabold text-white">--</p>
+                    <p class="text-xs text-gray-500 mt-0.5">kg</p>
+                </div>
+
+                <!-- IMC -->
+                <div class="bg-gray-800 rounded-xl p-4">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">IMC</p>
+                    <p id="imcValor" class="text-2xl font-extrabold text-white">--</p>
+                    <!-- Barra visual -->
+                    <div class="mt-2 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                        <div id="imcBarra" class="h-full rounded-full transition-all duration-700" style="width:0%"></div>
                     </div>
-                    <div class="bg-gray-800 p-3 rounded text-center">
-                        <span class="block text-sm text-gray-500 mb-1">Carboidratos</span>
-                        <span class="font-bold text-white">280g</span>
-                    </div>
-                    <div class="bg-gray-800 p-3 rounded text-center">
-                        <span class="block text-sm text-gray-500 mb-1">Gorduras</span>
-                        <span class="font-bold text-white">75g</span>
-                    </div>
+                    <p id="imcLabel" class="text-xs text-gray-400 mt-1.5">--</p>
+                </div>
+
+                <!-- Gordura -->
+                <div class="bg-gray-800 rounded-xl p-4 border-l-4 border-orange-500">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">% Gordura</p>
+                    <p id="gorduraAtual" class="text-2xl font-extrabold text-orange-400">--</p>
+                    <p class="text-xs text-gray-500 mt-0.5">%</p>
+                </div>
+
+                <!-- Massa Magra -->
+                <div class="bg-gray-800 rounded-xl p-4 border-l-4 border-blue-500">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Massa Magra</p>
+                    <p id="massaMagraAtual" class="text-2xl font-extrabold text-blue-400">--</p>
+                    <p class="text-xs text-gray-500 mt-0.5">kg</p>
                 </div>
             </div>
-            <button class="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 rounded-lg transition border border-gray-700">
-                Ver Cardápio Completo
-            </button>
         </section>
+
+        <!-- ════════════════════════════════════ PLANO NUTRICIONAL -->
+        <section id="secaoNutricao" class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-lg">
+            <div class="flex items-start justify-between mb-5 gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Plano Nutricional Diário</h2>
+                    <p id="subtituloNutricao" class="text-gray-400 text-sm mt-0.5">Carregando seu plano...</p>
+                </div>
+                <!-- Tag de objetivo (déficit / manutenção / superávit) -->
+                <span id="tagObjetivo" class="hidden flex-shrink-0 text-xs font-bold px-3 py-1 rounded-full border mt-1"></span>
+            </div>
+
+            <!-- Meta calórica -->
+            <div class="bg-gray-800 rounded-xl p-4 mb-5 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Meta calórica diária</p>
+                    <p class="text-3xl font-extrabold text-white">
+                        <span id="caloriasAlvo">--</span>
+                        <span class="text-sm font-normal text-gray-400 ml-1">kcal</span>
+                    </p>
+                </div>
+                <svg class="w-8 h-8 text-green-500 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+                </svg>
+            </div>
+
+            <!-- Macros -->
+            <div class="grid grid-cols-3 gap-4 mb-5">
+
+                <!-- Proteínas -->
+                <div class="bg-gray-800 rounded-xl p-4 text-center">
+                    <div class="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-2">
+                        <span class="text-red-400 font-extrabold text-xs">P</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-1">Proteínas</p>
+                    <p id="proteinasG" class="text-xl font-extrabold text-red-400">--<span class="text-sm font-normal text-gray-400">g</span></p>
+                    <div class="mt-2 h-1 bg-gray-700 rounded-full">
+                        <div class="h-full bg-red-500 rounded-full" style="width:30%"></div>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1">30%</p>
+                </div>
+
+                <!-- Carboidratos -->
+                <div class="bg-gray-800 rounded-xl p-4 text-center">
+                    <div class="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-2">
+                        <span class="text-yellow-400 font-extrabold text-xs">C</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-1">Carboidratos</p>
+                    <p id="carboidratosG" class="text-xl font-extrabold text-yellow-400">--<span class="text-sm font-normal text-gray-400">g</span></p>
+                    <div class="mt-2 h-1 bg-gray-700 rounded-full">
+                        <div class="h-full bg-yellow-500 rounded-full" style="width:45%"></div>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1">45%</p>
+                </div>
+
+                <!-- Gorduras -->
+                <div class="bg-gray-800 rounded-xl p-4 text-center">
+                    <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-2">
+                        <span class="text-green-400 font-extrabold text-xs">G</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-1">Gorduras</p>
+                    <p id="gordurasG" class="text-xl font-extrabold text-green-400">--<span class="text-sm font-normal text-gray-400">g</span></p>
+                    <div class="mt-2 h-1 bg-gray-700 rounded-full">
+                        <div class="h-full bg-green-500 rounded-full" style="width:25%"></div>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1">25%</p>
+                </div>
+            </div>
+
+            <!-- Meta de água -->
+            <div id="secaoAgua" class="hidden bg-gray-800/60 border border-gray-700 rounded-xl p-4 flex items-center gap-3">
+                <svg class="w-6 h-6 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 2C6 9 4 12.5 4 15a8 8 0 0016 0c0-2.5-2-6-8-13z"/>
+                </svg>
+                <div>
+                    <p class="text-xs text-gray-500">Meta de hidratação diária</p>
+                    <p class="text-white font-bold"><span id="metaAgua">--</span> L de água</p>
+                </div>
+            </div>
+
+            <!-- Estado: sem plano cadastrado -->
+            <div id="semPlano" class="hidden text-center py-6">
+                <p class="text-gray-500 text-sm">Nenhum plano nutricional ativo.</p>
+                <p class="text-gray-600 text-xs mt-1">
+                    Fale com seu nutricionista para ter seu plano cadastrado.
+                </p>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ PAINEL ADMIN -->
+        <section id="painelAdmin" class="hidden bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-lg">
+            <h2 class="text-lg font-bold text-white mb-2">Painel da Equipe</h2>
+            <p class="text-gray-400 text-sm">Use o menu acima para gerenciar pacientes, agendamentos e avaliações.</p>
+        </section>
+
     </div>
 </main>
 
+<!-- ═══════════════════════════════════════════════════════ SCRIPT -->
 <script type="module">
-    import { CONFIG } from './js/config.js';
+    import { CONFIG }         from './js/config.js';
     import { StorageManager } from './js/storage-manager.js';
-    import { apiClient } from './js/api-client.js';
+    import { apiClient }      from './js/api-client.js';
 
-    // 1. Validar autenticação imediatamente
+    // ── Auth ──────────────────────────────────────────────────────────────────
     StorageManager.requireAuth();
+    const role   = StorageManager.getRole();
+    const userId = StorageManager.getUserId();
+    const nome   = StorageManager.getName();
 
-    const role = StorageManager.getRole();
-    const idPacienteLogado = StorageManager.getUserId();
+    document.getElementById('nomeUsuario').textContent = nome || 'Usuário';
+    document.getElementById('avatarImg').src =
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(nome || 'U')}&background=1f2937&color=22c55e`;
 
-    // 2. Configurar o Logout seguro
-    document.getElementById('btnSair').addEventListener('click', (e) => {
+    // ── Logout ────────────────────────────────────────────────────────────────
+    document.getElementById('btnSair').addEventListener('click', e => {
         e.preventDefault();
         StorageManager.logout();
     });
 
-    // 3. Renderizar a Navbar dinamicamente conforme o nível de acesso
-    if (role === 'ROLE_ADMIN' || role === 'ROLE_GERENTE' || role === 'ROLE_FUNCIONARIO') {
-        document.getElementById('menuCadastro').classList.remove('hidden');
-        document.getElementById('menuLista').classList.remove('hidden');
-        document.getElementById('menuHorarios').classList.remove('hidden');
-        document.getElementById('menuRegistrar').classList.remove('hidden');
+    // ── Navbar por role ───────────────────────────────────────────────────────
+    const isEquipe = ['ROLE_ADMIN', 'ROLE_GERENTE', 'ROLE_FUNCIONARIO'].includes(role);
+    if (isEquipe) {
+        ['menuCadastro', 'menuLista', 'menuHorarios', 'menuRegistrar']
+            .forEach(id => document.getElementById(id)?.classList.remove('hidden'));
     } else if (role === 'ROLE_PACIENTE') {
-        document.getElementById('menuMarcar').classList.remove('hidden');
+        document.getElementById('menuMarcar')?.classList.remove('hidden');
     }
 
-    // 4. Carregar os dados reais da avaliação
+    // ── Dashboard ─────────────────────────────────────────────────────────────
     async function carregarDashboard() {
-        if (role !== 'ROLE_PACIENTE') {
-            document.getElementById('dataAvaliacao').innerText = 'Painel Administrativo da Unidade';
+        if (isEquipe) {
+            document.getElementById('painelAdmin').classList.remove('hidden');
+            document.getElementById('secaoIMC').classList.add('hidden');
+            document.getElementById('secaoNutricao').classList.add('hidden');
+            document.getElementById('dataAvaliacao').textContent = 'Painel da equipe';
             return;
         }
 
-        try {
-            // Busca simplificada pelo apiClient automatizado
-            const avaliacao = await apiClient.get(CONFIG.ENDPOINTS.AVALIACOES_PACIENTE_ULTIMA(idPacienteLogado));
+        // Carrega avaliação e plano em paralelo
+        const [avaliacao, plano] = await Promise.allSettled([
+            apiClient.get(CONFIG.ENDPOINTS.AVALIACOES_PACIENTE_ULTIMA(userId)),
+            apiClient.get(CONFIG.ENDPOINTS.PLANO_ATIVO(userId))
+        ]);
 
-            // Tratamento contra o congelamento da Data
-            let dataFormatada = 'Data não informada';
-            if (Array.isArray(avaliacao.dataAvaliacao)) {
-                const [ano, mes, dia] = avaliacao.dataAvaliacao;
-                dataFormatada = `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
-            } else if (avaliacao.dataAvaliacao) {
-                const dataObj = new Date(avaliacao.dataAvaliacao);
-                dataFormatada = dataObj.toLocaleDateString('pt-BR');
-            }
+        renderizarAvaliacao(avaliacao);
+        renderizarPlano(plano);
+    }
 
-            document.getElementById('dataAvaliacao').innerText = dataFormatada;
-            document.getElementById('pesoAtual').innerText = avaliacao.peso + ' kg';
-            document.getElementById('gorduraAtual').innerText = avaliacao.percentualGordura + ' %';
-            document.getElementById('massaMagraAtual').innerText = avaliacao.massaMuscular + ' kg';
-
-        } catch (error) {
-            console.error('Falha no processamento dos dados do painel:', error);
-            document.getElementById('dataAvaliacao').innerText = 'Nenhuma avaliação registrada ainda.';
-            document.getElementById('dataAvaliacao').classList.replace('text-green-500', 'text-gray-500');
+    // ── Renderiza dados da avaliação (IMC, composição) ────────────────────────
+    function renderizarAvaliacao(resultado) {
+        if (resultado.status === 'rejected') {
+            document.getElementById('dataAvaliacao').textContent = 'Nenhuma avaliação registrada ainda.';
+            document.getElementById('dataAvaliacao').className   = 'text-gray-500 font-semibold text-sm';
+            return;
         }
+
+        const av = resultado.value;
+
+        // Data formatada (Spring pode retornar array ou string ISO)
+        document.getElementById('dataAvaliacao').textContent = formatarData(av.dataAvaliacao);
+
+        // Medidas
+        document.getElementById('pesoAtual').textContent    = av.peso;
+        document.getElementById('gorduraAtual').textContent = av.percentualGordura;
+        document.getElementById('massaMagraAtual').textContent = av.massaMuscular;
+
+        // IMC
+        const imc = parseFloat(av.imc);
+        document.getElementById('imcValor').textContent  = imc.toFixed(1);
+        document.getElementById('imcLabel').textContent  = av.classificacaoImc || classificarImcLocal(imc);
+
+        // Barra colorida (escala de 10 a 45 → 0% a 100%)
+        const pct = Math.min(Math.max(((imc - 10) / 35) * 100, 0), 100);
+        const barra = document.getElementById('imcBarra');
+        barra.style.width = pct + '%';
+        barra.style.backgroundColor = hexImc(imc);
+
+        // Badge no cabeçalho
+        const badge = document.getElementById('badgeImc');
+        const [bg, text, border] = classesBadge(av.corImc || corImcLocal(imc));
+        badge.textContent  = av.classificacaoImc || classificarImcLocal(imc);
+        badge.className    = `text-xs font-bold px-4 py-1.5 rounded-full border ${bg} ${text} ${border}`;
+        badge.classList.remove('hidden');
+    }
+
+    // ── Renderiza dados do plano nutricional ──────────────────────────────────
+    function renderizarPlano(resultado) {
+        if (resultado.status === 'rejected') {
+            document.getElementById('semPlano').classList.remove('hidden');
+            document.getElementById('subtituloNutricao').textContent =
+                'Nenhum plano ativo. Solicite ao seu nutricionista.';
+            return;
+        }
+
+        const p = resultado.value;
+
+        document.getElementById('subtituloNutricao').textContent =
+            `Prescrito por ${p.profissional?.nome ?? 'seu nutricionista'} · válido desde ${formatarDataSimples(p.dataInicio)}`;
+
+        document.getElementById('caloriasAlvo').textContent  = Math.round(p.kcalDiario).toLocaleString('pt-BR');
+        document.getElementById('proteinasG').innerHTML      = `${Math.round(p.proteinas)}<span class="text-sm font-normal text-gray-400">g</span>`;
+        document.getElementById('carboidratosG').innerHTML   = `${Math.round(p.carboidratos)}<span class="text-sm font-normal text-gray-400">g</span>`;
+        document.getElementById('gordurasG').innerHTML       = `${Math.round(p.gorduras)}<span class="text-sm font-normal text-gray-400">g</span>`;
+
+        // Meta de água
+        if (p.metaAguaLitros) {
+            document.getElementById('metaAgua').textContent = p.metaAguaLitros.toFixed(1);
+            document.getElementById('secaoAgua').classList.remove('hidden');
+        }
+
+        // Tag de objetivo baseado em kcal relativa ao peso
+        const tag = document.getElementById('tagObjetivo');
+        if (p.pesoObjetivo) {
+            tag.textContent = `🎯 Objetivo: ${p.pesoObjetivo} kg`;
+            tag.className   = 'flex-shrink-0 text-xs font-bold px-3 py-1 rounded-full border bg-green-500/20 text-green-400 border-green-500/30 mt-1';
+            tag.classList.remove('hidden');
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function formatarData(dataAvaliacao) {
+        if (!dataAvaliacao) return 'Data não informada';
+        if (Array.isArray(dataAvaliacao)) {
+            const [ano, mes, dia] = dataAvaliacao;
+            return `${String(dia).padStart(2,'0')}/${String(mes).padStart(2,'0')}/${ano}`;
+        }
+        return new Date(dataAvaliacao).toLocaleDateString('pt-BR');
+    }
+
+    function formatarDataSimples(data) {
+        if (!data) return '--';
+        if (Array.isArray(data)) {
+            const [ano, mes, dia] = data;
+            return `${String(dia).padStart(2,'0')}/${String(mes).padStart(2,'0')}/${ano}`;
+        }
+        return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+    }
+
+    function classificarImcLocal(imc) {
+        if (imc < 18.5) return 'Abaixo do peso';
+        if (imc < 25.0) return 'Peso normal';
+        if (imc < 30.0) return 'Sobrepeso';
+        if (imc < 35.0) return 'Obesidade grau I';
+        if (imc < 40.0) return 'Obesidade grau II';
+        return 'Obesidade grau III';
+    }
+
+    function corImcLocal(imc) {
+        if (imc < 18.5) return 'blue';
+        if (imc < 25.0) return 'green';
+        if (imc < 30.0) return 'yellow';
+        if (imc < 35.0) return 'orange';
+        return 'red';
+    }
+
+    function hexImc(imc) {
+        if (imc < 18.5) return '#60a5fa';
+        if (imc < 25.0) return '#4ade80';
+        if (imc < 30.0) return '#facc15';
+        if (imc < 35.0) return '#fb923c';
+        return '#f87171';
+    }
+
+    function classesBadge(cor) {
+        const mapa = {
+            blue:   ['bg-blue-500/20',   'text-blue-400',   'border-blue-500/30'],
+            green:  ['bg-green-500/20',  'text-green-400',  'border-green-500/30'],
+            yellow: ['bg-yellow-500/20', 'text-yellow-400', 'border-yellow-500/30'],
+            orange: ['bg-orange-500/20', 'text-orange-400', 'border-orange-500/30'],
+            red:    ['bg-red-500/20',    'text-red-400',    'border-red-500/30'],
+        };
+        return mapa[cor] ?? mapa['green'];
     }
 
     carregarDashboard();

@@ -48,6 +48,13 @@ Este projeto está sendo desenvolvido como parte de estudos aprofundados em **En
 
 ---
 
+## 🔒 Segurança e Arquitetura de Rede
+
+O sistema foi projetado com práticas modernas de segurança de rede e flexibilidade de infraestrutura:
+
+* **Configuração de Origem Dinâmica:** O Front-end utiliza uma arquitetura de `CONFIG` com `window.location`, permitindo que o sistema identifique automaticamente a origem da requisição (IP ou Domínio). Isso resolve de forma nativa bloqueios de CORS e permite que o sistema rode em qualquer servidor ou rede (VMs, Nuvem, Local) sem necessidade de alterar o código-fonte (Hardcode de IPs).
+* **Proteção de Rota Administrativa (IP Whitelisting):** A área e os endpoints de Administração possuem uma camada dupla de segurança. Além de exigir o token JWT com a permissão `ROLE_ADMIN`, o sistema valida o endereço IP da requisição. O acesso é restrito exclusivamente ao endereço de *loopback* (`127.0.0.1` ou `localhost`), garantindo que apenas usuários operando fisicamente a máquina servidora possam gerenciar o sistema.
+
 ## 👨‍💻 Autor
 Desenvolvido com dedicação por **Tiago de Aquino Nunes**.
 * 🎓 Estudante de Engenharia de Software — Universidade Católica de Brasília (UCB)

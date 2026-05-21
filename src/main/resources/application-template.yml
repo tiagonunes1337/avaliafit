@@ -1,0 +1,8 @@
+  git mv src/main/resources/application.yml src/main/resources/application-local.yml
+  
+  echo "src/main/resources/application-local.yml" >> .gitignore
+  
+  git add src/main/resources/application-template.yml
+  git add .gitignore
+git commit -m "Segurança: Removendo configurações sensíveis e adicionando template"
+  git push

@@ -18,7 +18,7 @@ public class CardapioRefeicao {
 
     @ManyToOne
     @JoinColumn(name = "idPlano", nullable = false)
-    private PlanoNutricional planoNutricional;
+    private PlanoNutricional planoNutricional; // Relacionamento com Plano Nutricional
 
     @Column(nullable = false)
     private String nomeRefeicao; // Ex: "Café da Manhã", "Almoço"
@@ -26,7 +26,6 @@ public class CardapioRefeicao {
     @Column(columnDefinition = "TEXT")
     private String descricao; // Ex: "2 ovos mexidos, 1 fatia de pão integral, 1 xícara de café"
 
-    // --- NOVOS CAMPOS PARA O CÁLCULO MATEMÁTICO ---
 
     @Column(nullable = false)
     private Double calorias; // Ex: 350.5
@@ -39,4 +38,7 @@ public class CardapioRefeicao {
 
     @Column(nullable = false)
     private Double gorduras; // Em gramas. Ex: 12.0
+
+    @Column(nullable = false)
+    private Double taxaMetabolicaBasal; // Ex: 1568.0
 }
