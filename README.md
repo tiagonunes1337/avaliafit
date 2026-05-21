@@ -86,4 +86,4 @@ cp src/main/resources/application-template.yml src/main/resources/application-lo
   3. Revisão de dependências e atualizações regulares (evitar dependências com vulnerabilidades conhecidas).
   4. Implementar testes end-to-end para fluxos críticos (login, agendamento, registro de avaliação).
 
-Se quiser, posso abrir um PR com essas mudanças, adicionar um `.env.example`, e configurar um pipeline básico de CI (GitHub Actions). 
+O site está sendo atualizado e ainda está em desenvolvimento.
