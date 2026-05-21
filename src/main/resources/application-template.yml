@@ -1,8 +1,27 @@
-  git mv src/main/resources/application.yml src/main/resources/application-local.yml
-  
-  echo "src/main/resources/application-local.yml" >> .gitignore
-  
-  git add src/main/resources/application-template.yml
-  git add .gitignore
-git commit -m "Segurança: Removendo configurações sensíveis e adicionando template"
-  git push
+# Application configuration template
+# Copy this file to src/main/resources/application-local.yaml and fill in secrets.
+# Do NOT commit application-local.yaml (it's ignored by .gitignore).
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/avaliafit
+    username: YOUR_DB_USER
+    password: YOUR_DB_PASSWORD
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: CHANGE_ME
+    expirationMs: 3600000
+
+# Notes:
+# - Replace placeholder values with your local credentials.
+# - Prefer using environment variables or secret manager for production.

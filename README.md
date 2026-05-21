@@ -59,3 +59,31 @@ O sistema foi projetado com práticas modernas de segurança de rede e flexibili
 Desenvolvido com dedicação por **Tiago de Aquino Nunes**.
 * 🎓 Estudante de Engenharia de Software — Universidade Católica de Brasília (UCB)
 * 💻 Técnico em Informática
+
+**Configuração Local**
+- **Arquivo local:** As configurações sensíveis devem ficar no arquivo local `src/main/resources/application-local.yaml`, que não é versionado.
+- **Template:** Use o arquivo de exemplo [src/main/resources/application-template.yml](src/main/resources/application-template.yml) como base. Copie e personalize para o seu ambiente local:
+
+```bash
+cp src/main/resources/application-template.yml src/main/resources/application-local.yaml
+# editar src/main/resources/application-local.yaml com credenciais locais (NUNCA commitar)
+```
+- **Regra:** Não commit e não compartilhe `application-local.yaml`. O repositório já contém uma entrada em `.gitignore` para isso.
+
+**Avaliação do Sistema**
+- **Arquitetura:** Backend com Spring Boot 3 (Java 17) e JPA/Hibernate; front-end estático com módulos JavaScript. Estrutura modular e boa separação de camadas.
+- **Pontos Fortes:** Autenticação com JWT, RBAC bem definido, modelagem de domínio (usuário/paciente/funcionário/avaliação) coerente, e rotas protegidas.
+- **Riscos e Observações de Segurança:**
+  - Segredos (senha do BD, `jwt.secret`) não devem estar em arquivos versionados; usar variáveis de ambiente ou um cofre (Vault).
+  - Verifique hashing de senhas (usar `BCrypt` ou `Argon2`) e políticas de senha/complexidade.
+  - A estratégia de whitelist de IP para área administrativa é uma camada adicional, mas não substitui controles de rede e VPNs; cuidado com deploys em nuvem.
+- **Banco de Dados:** O esquema SQL inicial está presente em `bancodedados.sql`. Recomendo adotar migrações automáticas (Flyway ou Liquibase) para versionamento do schema.
+- **Testes e CI:** Cobertura de testes unitários e de integração é essencial; configure pipeline (GitHub Actions/Gradle CI) para executar testes, linters e checks de segurança em PRs.
+- **Observabilidade:** Adicionar logs estruturados, métricas (Prometheus) e monitoramento de erros (Sentry) facilitará operação e debugging.
+- **Próximos passos recomendados:**
+  1. Mover segredos para variáveis de ambiente e documentar `.env.example` (sem valores sensíveis).
+  2. Adotar migrações (Flyway) e integração contínua.
+  3. Revisão de dependências e atualizações regulares (evitar dependências com vulnerabilidades conhecidas).
+  4. Implementar testes end-to-end para fluxos críticos (login, agendamento, registro de avaliação).
+
+Se quiser, posso abrir um PR com essas mudanças, adicionar um `.env.example`, e configurar um pipeline básico de CI (GitHub Actions). 
