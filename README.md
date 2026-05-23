@@ -68,7 +68,14 @@ Desenvolvido com dedicação por **Tiago de Aquino Nunes**.
 cp src/main/resources/application-template.yml src/main/resources/application-local.yaml
 # editar src/main/resources/application-local.yaml com credenciais locais (NUNCA commitar)
 ```
-- **Regra:** Não commit e não compartilhe `application-local.yaml`. O repositório já contém uma entrada em `.gitignore` para isso.
+- **Env file:** Copie `.env.example` para `.env` e preencha suas credenciais locais. Depois, carregue-o no terminal antes de iniciar a aplicação:
+
+```bash
+cp .env.example .env
+source .env
+./gradlew bootRun
+```
+- **Regra:** Não commit e não compartilhe `.env` ou `application-local.yaml`. O repositório já contém uma entrada em `.gitignore` para isso.
 
 **Avaliação do Sistema**
 - **Arquitetura:** Backend com Spring Boot 3 (Java 17) e JPA/Hibernate; front-end estático com módulos JavaScript. Estrutura modular e boa separação de camadas.
