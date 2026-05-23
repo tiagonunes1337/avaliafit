@@ -68,7 +68,7 @@ Desenvolvido com dedicação por **Tiago de Aquino Nunes**.
 cp src/main/resources/application-template.yml src/main/resources/application-local.yaml
 # editar src/main/resources/application-local.yaml com credenciais locais (NUNCA commitar)
 ```
-- **Env file:** Copie `.env.example` para `.env` e preencha suas credenciais locais. Depois, carregue-o no terminal antes de iniciar a aplicação:
+- **Env file:** Copie `.env.example` para `.env` e preencha suas credenciais locais. O Spring Boot carregará essas variáveis do ambiente automaticamente.
 
 ```bash
 cp .env.example .env
