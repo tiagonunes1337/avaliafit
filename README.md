@@ -7,6 +7,10 @@ O **Avalia FIT** é uma aplicação web robusta voltada para a gestão de clíni
 
 A aplicação permite desde a marcação simplificada de consultas até o monitoramento detalhado e a evolução corporal do paciente, registrando métricas essenciais como peso, altura, percentual de gordura, massa magra e cálculo automatizado de Índice de Massa Corporal (IMC).
 
+O Avalia Fit foi concebido para proporcionar facilidade ao cliente e ao nutricionista, com uma jornada intuitiva para o paciente e controles administrativos seguros para a equipe clínica.
+
+O produto também está preparado para evolução com integração de Inteligência Artificial, abrindo caminho para análises de progresso e recomendações clínicas sofisticadas.
+
 Este projeto está sendo desenvolvido como parte de estudos aprofundados em **Engenharia de Software** e aprimoramento prático em desenvolvimento **Full-Stack**.
 
 ## 🚀 Funcionalidades
@@ -52,8 +56,82 @@ Este projeto está sendo desenvolvido como parte de estudos aprofundados em **En
 
 O sistema foi projetado com práticas modernas de segurança de rede e flexibilidade de infraestrutura:
 
-* **Configuração de Origem Dinâmica:** O Front-end utiliza uma arquitetura de `CONFIG` com `window.location`, permitindo que o sistema identifique automaticamente a origem da requisição (IP ou Domínio). Isso resolve de forma nativa bloqueios de CORS e permite que o sistema rode em qualquer servidor ou rede (VMs, Nuvem, Local) sem necessidade de alterar o código-fonte (Hardcode de IPs).
-* **Proteção de Rota Administrativa (IP Whitelisting):** A área e os endpoints de Administração possuem uma camada dupla de segurança. Além de exigir o token JWT com a permissão `ROLE_ADMIN`, o sistema valida o endereço IP da requisição. O acesso é restrito exclusivamente ao endereço de *loopback* (`127.0.0.1` ou `localhost`), garantindo que apenas usuários operando fisicamente a máquina servidora possam gerenciar o sistema.
+* **Configuração de Origem Dinâmica:** O Front-end utiliza uma arquitetura de `CONFIG` com `window.location`, permitindo que o sistema identifique automaticamente a origem da requisição (IP ou Domínio). Isso ajuda a evitar bloqueios de CORS e permite que o sistema rode em qualquer servidor ou rede (VMs, Nuvem, Local) sem necessidade de alterar o código-fonte.
+* **Proteção de Rota Administrativa (IP Whitelisting):** A área e os endpoints de administração possuem uma camada adicional de controle. Além de exigir o token JWT, o sistema restringe o acesso a páginas administrativas a perfis autorizados.
+
+## 🛡️ Segurança e Compliance Clínico
+
+O Avalia Fit foi construído com um foco explícito em proteção de dados clínicos e conformidade regulatória.
+
+* **Identidade e Controle de Acesso (RBAC):** O sistema exige que todo usuário tenha um papel definido. Não há acesso anônimo ou sem papel. Os papéis principais são `ROLE_PACIENTE`, `ROLE_FUNCIONARIO` e `ROLE_ADMIN`.
+* **Integridade de Identidade:** O banco de dados bloqueia duplicidade de CPF e e-mail, prevenindo criação de contas falsas e sobreposição de prontuários.
+* **Motor de Auditoria:** A tabela `AuditoriaAvaliacao` registra qualquer alteração em dados sensíveis de avaliação. Cada ajuste grava o usuário que alterou, o campo alterado, valor anterior, valor novo, data/hora e motivo da alteração.
+* **Compliance LGPD:** O sistema garante responsabilização. Não existem alterações sem autor ou justificativa. Isso é essencial para proteger a clínica contra fraudes e questões legais.
+
+## 🧬 Modelo de Dados Principais
+
+### 1. Tabela `usuario`
+Armazena os dados básicos de todos os usuários do sistema:
+* `idUsuario` — chave primária.
+* `nome` — nome completo.
+* `dataNascimento` — data de nascimento.
+* `email` — e-mail único.
+* `senha` — senha de acesso.
+* `cpf` — CPF único.
+* `telefone` — telefone de contato.
+* `role` — nível de acesso (`ROLE_PACIENTE`, `ROLE_FUNCIONARIO`, `ROLE_ADMIN`).
+
+### 2. Tabela `paciente`
+Detalhes específicos dos pacientes:
+* `idPaciente` — chave primária referenciando `idUsuario`.
+* `objetivo` — objetivo do paciente (ex: ganho de massa, perda de peso).
+
+### 3. Tabela `funcionario`
+Detalhes específicos dos funcionários:
+* `idFuncionario` — chave primária referenciando `idUsuario`.
+* `cargo` — função específica do funcionário (nutricionista, gerente, admin).
+
+### 4. Tabela `avaliacao`
+Registra as medições e a bioimpedância:
+* `idAvaliacao` — chave primária.
+* `idPaciente` — paciente avaliado.
+* `idFuncionario` — profissional que realizou a avaliação.
+* `dataAvaliacao` — data e hora da avaliação.
+* `peso`, `altura`, `imc` — medidas antropométricas.
+* `percentualGordura`, `massaMuscular` — resultados da bioimpedância.
+* `observacoes` — campo de texto para anotações.
+
+### 5. Tabela `plano_nutricional`
+Detalha o plano alimentar:
+* `idPlano` — chave primária.
+* `idPaciente`, `idFuncionario` — identificam o paciente e o criador do plano.
+* `kcalDiario` — ingestão calórica diária.
+* `proteinas`, `carboidratos`, `gorduras` — distribuição de macronutrientes.
+* `dataInicio` — data de início do plano.
+* `ativo` — indica se o plano está ativo.
+
+### 6. Tabela `cardapio_refeicao`
+Detalha as refeições dentro de um plano:
+* `idRefeicao` — chave primária.
+* `idPlano` — plano nutricional ao qual a refeição pertence.
+* `nomeRefeicao` — nome da refeição (café da manhã, almoço, etc.).
+* `descricao` — detalhes dos alimentos e preparo.
+
+### 7. Tabela `agendamento`
+Gerencia as consultas e serviços:
+* `idAgendamento` — chave primária.
+* `idPaciente`, `idFuncionario` — identificam quem agendou e com quem.
+* `dataConsulta`, `horario` — dia e hora agendados.
+* `tipoServico` — serviço prestado.
+* `status` — situação do agendamento.
+* `observacoes` — notas sobre o agendamento.
+
+### 8. Tabela `horario_disponivel`
+Controla a agenda dos funcionários:
+* `idHorario` — chave primária.
+* `idFuncionario` — funcionário associado.
+* `data`, `horario` — dia e hora disponíveis.
+* `disponivel` — indica se o horário está livre (1) ou ocupado (0).
 
 ## 👨‍💻 Autor
 Desenvolvido com dedicação por **Tiago de Aquino Nunes**.
