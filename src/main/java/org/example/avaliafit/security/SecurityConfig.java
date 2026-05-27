@@ -44,10 +44,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/", "/*.html", "/index.html", "/login.html",
                                 "/marcar.html", "/inicial.html",
-                                "/cadastro.html", "/listarusuarios.html", "/editarusuario.html",
                                 "/registraravaliacao.html", "/gerenciarhorarios.html",
                                 "/listarhorario.html", "/editarhorario.html",
-                                 "/css/**", "/img/**", "/js/**", "/error"
+                                 "/css/**","/*css/**",  "/img/**", "/js/**", "/error"
                         ).permitAll()
 
                         // 3. Auth pública
@@ -65,13 +64,13 @@ public class SecurityConfig {
 
                         // 5. Rotas genéricas por domínio
                         .requestMatchers("/avaliacoes/**")
-                        .hasAnyAuthority("ROLE_FUNCIONARIO", "ROLE_ADMIN", "ROLE_GERENTE")
+                        .hasAnyRole("FUNCIONARIO", "ADMIN", "GERENTE")
 
                         .requestMatchers("/planos/**")
-                        .hasAnyAuthority("ROLE_FUNCIONARIO", "ROLE_ADMIN", "ROLE_GERENTE")
+                        .hasAnyRole("FUNCIONARIO", "ADMIN", "GERENTE")
 
                         .requestMatchers("/agendamentos/**")
-                        .hasAnyAuthority("ROLE_PACIENTE", "ROLE_FUNCIONARIO", "ROLE_ADMIN")
+                        .hasAnyRole("PACIENTE", "FUNCIONARIO", "ADMIN")
 
                         .requestMatchers("/usuarios/**").authenticated()
                         .requestMatchers("/horarios/**").authenticated()

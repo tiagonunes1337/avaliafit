@@ -95,6 +95,31 @@ CREATE TABLE IF NOT EXISTS agendamento (
     CONSTRAINT fk_agend_func     FOREIGN KEY (idFuncionario) REFERENCES funcionario(idFuncionario)
 );
 
+
+-- ================================================
+-- AUDITORIA_AVALIACAO
+-- ================================================
+CREATE TABLE IF NOT EXISTS auditoria_avaliacao (
+   idAuditoria         INT AUTO_INCREMENT PRIMARY KEY,
+    idAvaliacao         INT NOT NULL,
+    idFuncionarioAlterou INT NOT NULL,
+     campoAlterado       VARCHAR(100) NOT NULL,
+    valorAnterior       VARCHAR(255) NOT NULL,
+    valorNovo           VARCHAR(255) NOT NULL,
+    dataAlteracao       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    motivo              VARCHAR(500),
+
+    CONSTRAINT fk_audit_aval FOREIGN KEY (idAvaliacao)
+    REFERENCES avaliacao(idAvaliacao) ON DELETE CASCADE,
+    CONSTRAINT fk_audit_func FOREIGN KEY (idFuncionarioAlterou)
+    REFERENCES funcionario(idFuncionario) ON DELETE RESTRICT
+    );
+
+-- ✅ Índices para performance
+CREATE INDEX idx_auditoria_avaliacao ON auditoria_avaliacao(idAvaliacao);
+CREATE INDEX idx_auditoria_funcionario ON auditoria_avaliacao(idFuncionarioAlterou);
+CREATE INDEX idx_auditoria_data ON auditoria_avaliacao(dataAlteracao);
+
 -- ================================================
 -- AGENDAMENTO (criado completo)
 -- ================================================

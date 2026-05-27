@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.avaliafit.dto.UsuarioRequestDTO;
 import org.example.avaliafit.dto.UsuarioResponseDTO;
 import org.example.avaliafit.service.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize; // Importante para as permissões
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @PostMapping
-    public ResponseEntity<?> cadastrar(@RequestBody UsuarioRequestDTO dto) {
+    public ResponseEntity<?> cadastrar(@Valid @RequestBody UsuarioRequestDTO dto) {
         try {
             return ResponseEntity.ok(usuarioService.cadastrar(dto));
         } catch (RuntimeException e) {

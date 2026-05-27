@@ -6,6 +6,7 @@ import org.example.avaliafit.dto.LoginResponseDTO;
 import org.example.avaliafit.model.Usuario; // Importar a classe Usuario
 import org.example.avaliafit.repository.UsuarioRepository; // Importar o repositório de Usuario
 import org.example.avaliafit.security.JwtService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +24,7 @@ public class AuthController {
     private final UsuarioRepository usuarioRepository; // Injetar UsuarioRepository
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO dto) {
 
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getSenha())

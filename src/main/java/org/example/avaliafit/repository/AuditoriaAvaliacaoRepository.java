@@ -12,7 +12,7 @@ import java.util.List;
 public interface AuditoriaAvaliacaoRepository extends JpaRepository<AuditoriaAvaliacao, Integer> {
 
     List<AuditoriaAvaliacao> findByAvaliacaoOrderByDataAlteracaoDesc(Avaliacao avaliacao);
-    
+
     List<AuditoriaAvaliacao> findByAvaliacaoAndCampoAlterado(Avaliacao avaliacao, String campoAlterado);
 }
 
