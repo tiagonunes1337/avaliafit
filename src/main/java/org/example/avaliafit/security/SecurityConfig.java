@@ -47,7 +47,7 @@ public class SecurityConfig {
                                 "/cadastro.html", "/listarusuarios.html", "/editarusuario.html",
                                 "/registraravaliacao.html", "/gerenciarhorarios.html",
                                 "/listarhorario.html", "/editarhorario.html",
-                                "/*.css", "/css/**", "/img/**", "/js/**", "/error"
+                                 "/css/**", "/img/**", "/js/**", "/error"
                         ).permitAll()
 
                         // 3. Auth pública
