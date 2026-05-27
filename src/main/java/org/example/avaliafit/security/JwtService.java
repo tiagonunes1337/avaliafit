@@ -16,6 +16,17 @@ public class JwtService {
 
     @Value("${jwt.expiration}")
     private Long expiration;
+    @PostConstruct
+    public void validar() {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("[JWT] jwt.secret não configurado no application.yaml!");
+        }
+        if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException(
+                    "[JWT] jwt.secret precisa ter 32+ chars. Atual: " + secret.length() + " chars.");
+        }
+
+    }
 
     private SecretKey getKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
