@@ -6,9 +6,10 @@ import org.example.avaliafit.dto.AvaliacaoRequestDTO;
 import org.example.avaliafit.dto.AvaliacaoResponseDTO;
 import org.example.avaliafit.dto.AuditoriaAvaliacaoResponseDTO;
 import org.example.avaliafit.dto.AvaliacaoUpdateRequestDTO;
+import org.example.avaliafit.exception.AcessoNegadoException;
+import org.example.avaliafit.exception.RegraNegocioException;
 import org.example.avaliafit.model.Agendamento;
 import org.example.avaliafit.model.Avaliacao;
-import org.example.avaliafit.model.AuditoriaAvaliacao;
 import org.example.avaliafit.model.Funcionario;
 import org.example.avaliafit.model.Paciente;
 import org.example.avaliafit.model.Usuario;
@@ -17,7 +18,6 @@ import org.example.avaliafit.repository.AuditoriaAvaliacaoRepository;
 import org.example.avaliafit.repository.AvaliacaoRepository;
 import org.example.avaliafit.repository.FuncionarioRepository;
 import org.example.avaliafit.repository.PacienteRepository;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -36,18 +36,21 @@ public class AvaliacaoService {
     private final AuditoriaAvaliacaoRepository auditoriaRepository;
     private final FuncionarioRepository funcionarioRepository;
 
-    // ── CREATE ────────────────────────────────────────────────────────────────
+    // INJEÇÃO CORRETA DO SERVIÇO DE AUDITORIA
+    private final AuditoriaAvaliacaoService auditoriaService;
+
+    // == CREATE ==========================================================
     @Transactional
     public AvaliacaoResponseDTO registrar(AvaliacaoRequestDTO dto) {
 
         Agendamento agendamento = agendamentoRepository.findById(dto.getIdAgendamento())
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
+                .orElseThrow(() -> new RegraNegocioException("Agendamento não encontrado."));
 
         if (agendamento.getAvaliacao() != null) {
-            throw new RuntimeException("Este agendamento já possui uma avaliação registrada.");
+            throw new RegraNegocioException("Este agendamento já possui uma avaliação registrada.");
         }
         if (dto.getAltura() == null || dto.getAltura().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("A altura deve ser maior que zero.");
+            throw new RegraNegocioException("A altura deve ser maior que zero.");
         }
 
         BigDecimal imc = calcularImc(dto.getPeso(), dto.getAltura());
@@ -66,115 +69,70 @@ public class AvaliacaoService {
 
         avaliacaoRepository.save(avaliacao);
 
-        // Marca o agendamento como avaliado
         agendamento.setStatus("avaliado");
         agendamentoRepository.save(agendamento);
 
         return toResponseDTO(avaliacao);
     }
 
-    // ── UPDATE COM AUDITORIA ────────────────────────────────────────────────
-
+    // == UPDATE COM AUDITORIA ============================================
     @Transactional
-    public AvaliacaoResponseDTO atualizar(
-            Integer idAvaliacao,
-            AvaliacaoUpdateRequestDTO dto,
-            Integer idFuncionarioLogado
-    ) {
+    public AvaliacaoResponseDTO atualizar(Integer idAvaliacao, AvaliacaoUpdateRequestDTO dto, Integer idFuncionarioLogado) {
 
         if (dto.getMotivo() == null || dto.getMotivo().isBlank()) {
-            throw new RuntimeException("O motivo da alteração é obrigatório para fins de auditoria e conformidade LGPD.");
+            throw new RegraNegocioException("O motivo da alteração é obrigatório para fins de auditoria.");
         }
-
 
         Avaliacao avaliacaoAntiga = avaliacaoRepository.findById(idAvaliacao)
-                .orElseThrow(() -> new RuntimeException("Avaliação não encontrada."));
-
+                .orElseThrow(() -> new RegraNegocioException("Avaliação não encontrada."));
 
         if (dto.getAltura() != null && dto.getAltura().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("A altura deve ser maior que zero.");
+            throw new RegraNegocioException("A altura deve ser maior que zero.");
         }
 
+        Funcionario funcionarioLogado = funcionarioRepository.findById(idFuncionarioLogado)
+                .orElseThrow(() -> new RegraNegocioException("Funcionário logado não encontrado."));
 
-        Funcionario funcionarioLogado = funcionarioRepository.findById(idFuncionarioLogado)  // ✅ CORRIGIDO
-                .orElseThrow(() -> new RuntimeException("Funcionário/usuário logado não encontrado."));
+        // COMPARAÇÕES ISOLADAS USANDO O SERVIÇO INJETADO (Sem Ifs caóticos)
+        auditoriaService.registrarSeAlterado(avaliacaoAntiga, funcionarioLogado, "Peso",
+                String.valueOf(avaliacaoAntiga.getPeso()), String.valueOf(dto.getPeso()), dto.getMotivo());
 
+        auditoriaService.registrarSeAlterado(avaliacaoAntiga, funcionarioLogado, "Altura",
+                String.valueOf(avaliacaoAntiga.getAltura()), String.valueOf(dto.getAltura()), dto.getMotivo());
 
-        registrarAlteracao(avaliacaoAntiga, "peso", avaliacaoAntiga.getPeso(),
-                dto.getPeso(), funcionarioLogado, dto.getMotivo());
+        auditoriaService.registrarSeAlterado(avaliacaoAntiga, funcionarioLogado, "Percentual de Gordura",
+                String.valueOf(avaliacaoAntiga.getPercentualGordura()), String.valueOf(dto.getPercentualGordura()), dto.getMotivo());
 
-        registrarAlteracao(avaliacaoAntiga, "altura", avaliacaoAntiga.getAltura(),
-                dto.getAltura(), funcionarioLogado, dto.getMotivo());
+        auditoriaService.registrarSeAlterado(avaliacaoAntiga, funcionarioLogado, "Massa Muscular",
+                String.valueOf(avaliacaoAntiga.getMassaMuscular()), String.valueOf(dto.getMassaMuscular()), dto.getMotivo());
 
-        registrarAlteracao(avaliacaoAntiga, "percentualGordura", avaliacaoAntiga.getPercentualGordura(),
-                dto.getPercentualGordura(), funcionarioLogado, dto.getMotivo());
+        auditoriaService.registrarSeAlterado(avaliacaoAntiga, funcionarioLogado, "Observações",
+                avaliacaoAntiga.getObservacoes(), dto.getObservacoes(), dto.getMotivo());
 
-        registrarAlteracao(avaliacaoAntiga, "massaMuscular", avaliacaoAntiga.getMassaMuscular(),
-                dto.getMassaMuscular(), funcionarioLogado, dto.getMotivo());
-
-        registrarAlteracao(avaliacaoAntiga, "observacoes", avaliacaoAntiga.getObservacoes(),
-                dto.getObservacoes(), funcionarioLogado, dto.getMotivo());
-
-
+        // ATUALIZAÇÃO DA ENTIDADE (Apenas uma vez)
         if (dto.getPeso() != null) avaliacaoAntiga.setPeso(dto.getPeso());
         if (dto.getAltura() != null) avaliacaoAntiga.setAltura(dto.getAltura());
         if (dto.getPercentualGordura() != null) avaliacaoAntiga.setPercentualGordura(dto.getPercentualGordura());
         if (dto.getMassaMuscular() != null) avaliacaoAntiga.setMassaMuscular(dto.getMassaMuscular());
         if (dto.getObservacoes() != null) avaliacaoAntiga.setObservacoes(dto.getObservacoes());
 
-        // 7️⃣ RECALCULAR IMC se peso ou altura mudaram
+        // RECALCULAR IMC se peso ou altura mudaram
         if (dto.getPeso() != null || dto.getAltura() != null) {
             avaliacaoAntiga.setImc(calcularImc(avaliacaoAntiga.getPeso(), avaliacaoAntiga.getAltura()));
         }
 
-
         Avaliacao avaliacaoAtualizada = avaliacaoRepository.save(avaliacaoAntiga);
-
         return toResponseDTO(avaliacaoAtualizada);
     }
 
-    private void registrarAlteracao(
-            Avaliacao avaliacao,
-            String campoAlterado,
-            Object valorAnterior,
-            Object valorNovo,
-            Funcionario funcionario,
-            String motivo
-    ) {
-        // Se ambos são null, não há alteração
-        if (valorAnterior == null && valorNovo == null) {
-            return;
-        }
-
-        // Se os valores são iguais, não há alteração
-        if (valorAnterior != null && valorAnterior.equals(valorNovo)) {
-            return;
-        }
-
-        // Criar e persistir registro de auditoria
-        AuditoriaAvaliacao auditoria = new AuditoriaAvaliacao();
-        auditoria.setAvaliacao(avaliacao);
-        auditoria.setFuncionarioQueAlterou(funcionario);
-        auditoria.setCampoAlterado(campoAlterado);
-        auditoria.setValorAnterior(valorAnterior != null ? valorAnterior.toString() : "null");
-        auditoria.setValorNovo(valorNovo != null ? valorNovo.toString() : "null");
-        auditoria.setMotivo(motivo);
-        auditoria.setDataAlteracao(LocalDateTime.now());
-
-        auditoriaRepository.save(auditoria);
-
-        System.out.println(" [AUDITORIA] Campo '" + campoAlterado + "' alterado por " +
-                funcionario.getUsuario().getNome() + ": " +
-                valorAnterior + " → " + valorNovo);
-    }
-
+    // == LISTAGEM DE AUDITORIA ===========================================
     public List<AuditoriaAvaliacaoResponseDTO> listarAuditoria(Integer idAvaliacao, Usuario usuarioLogado) {
         Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)
-                .orElseThrow(() -> new RuntimeException("Avaliação não encontrada."));
+                .orElseThrow(() -> new RegraNegocioException("Avaliação não encontrada."));
 
         if ("ROLE_PACIENTE".equals(usuarioLogado.getRole()) &&
                 !avaliacao.getPaciente().getUsuario().getIdUsuario().equals(usuarioLogado.getIdUsuario())) {
-            throw new AccessDeniedException("Acesso negado: apenas o paciente dono ou a equipe de saúde podem ver este histórico.");
+            throw new AcessoNegadoException("Acesso negado: apenas o paciente dono ou a equipe podem ver este histórico.");
         }
 
         return auditoriaRepository.findByAvaliacaoOrderByDataAlteracaoDesc(avaliacao)
@@ -183,28 +141,12 @@ public class AvaliacaoService {
                 .toList();
     }
 
-
-    private AuditoriaAvaliacaoResponseDTO toAuditoriaResponseDTO(AuditoriaAvaliacao auditoria) {
-        AuditoriaAvaliacaoResponseDTO dto = new AuditoriaAvaliacaoResponseDTO();
-        dto.setIdAuditoria(auditoria.getIdAuditoria());
-        dto.setIdAvaliacao(auditoria.getAvaliacao().getIdAvaliacao());
-        dto.setNomeFuncionario(auditoria.getFuncionarioQueAlterou().getUsuario().getNome());
-        dto.setCargoFuncionario(auditoria.getFuncionarioQueAlterou().getCargo());
-        dto.setCampoAlterado(auditoria.getCampoAlterado());
-        dto.setValorAnterior(auditoria.getValorAnterior());
-        dto.setValorNovo(auditoria.getValorNovo());
-        dto.setDataAlteracao(auditoria.getDataAlteracao());
-        dto.setMotivo(auditoria.getMotivo());
-        return dto;
-    }
-
-    // ── DELETE ────────────────────────────────────────────────────────────────
+    // == DELETE ==========================================================
     @Transactional
     public void deletar(Integer idAvaliacao) {
         Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)
-                .orElseThrow(() -> new RuntimeException("Avaliação não encontrada."));
+                .orElseThrow(() -> new RegraNegocioException("Avaliação não encontrada."));
 
-        // Reabre o agendamento para que possa ser reavaliado
         if (avaliacao.getAgendamento() != null) {
             agendamento(avaliacao).setStatus("agendado");
             agendamentoRepository.save(agendamento(avaliacao));
@@ -213,22 +155,21 @@ public class AvaliacaoService {
         avaliacaoRepository.delete(avaliacao);
     }
 
-    // ── READ: última avaliação ────────────────────────────────────────────────
+    // == READ ============================================================
     public AvaliacaoResponseDTO buscarUltimaAvaliacao(Integer idUsuario) {
         Paciente paciente = pacienteRepository.findByUsuario_IdUsuario(idUsuario)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado."));
+                .orElseThrow(() -> new RegraNegocioException("Paciente não encontrado."));
 
         return avaliacaoRepository.findByPaciente(paciente)
                 .stream()
                 .max(Comparator.comparing(Avaliacao::getDataAvaliacao))
                 .map(this::toResponseDTO)
-                .orElseThrow(() -> new RuntimeException("Nenhuma avaliação encontrada para este paciente."));
+                .orElseThrow(() -> new RegraNegocioException("Nenhuma avaliação encontrada."));
     }
 
-    // ── READ: histórico ───────────────────────────────────────────────────────
     public List<AvaliacaoResponseDTO> listarPorPaciente(Integer idUsuario) {
         Paciente paciente = pacienteRepository.findByUsuario_IdUsuario(idUsuario)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado."));
+                .orElseThrow(() -> new RegraNegocioException("Paciente não encontrado."));
 
         return avaliacaoRepository.findByPaciente(paciente)
                 .stream()
@@ -237,7 +178,7 @@ public class AvaliacaoService {
                 .toList();
     }
 
-    // ── HELPERS ───────────────────────────────────────────────────────────────
+    // == HELPERS =========================================================
     private Agendamento agendamento(Avaliacao av) {
         return av.getAgendamento();
     }
@@ -260,11 +201,24 @@ public class AvaliacaoService {
         dto.setObservacoes(av.getObservacoes());
         if (av.getAgendamento() != null) dto.setIdAgendamento(av.getAgendamento().getIdAgendamento());
 
-        // Classificação e cor do IMC calculadas aqui, prontas para o front-end
         double imc = av.getImc().doubleValue();
         dto.setClassificacaoImc(classificarImc(imc));
         dto.setCorImc(corImc(imc));
 
+        return dto;
+    }
+
+    private AuditoriaAvaliacaoResponseDTO toAuditoriaResponseDTO(org.example.avaliafit.model.AuditoriaAvaliacao auditoria) {
+        AuditoriaAvaliacaoResponseDTO dto = new AuditoriaAvaliacaoResponseDTO();
+        dto.setIdAuditoria(auditoria.getIdAuditoria());
+        dto.setIdAvaliacao(auditoria.getAvaliacao().getIdAvaliacao());
+        dto.setNomeFuncionario(auditoria.getFuncionarioQueAlterou().getUsuario().getNome());
+        dto.setCargoFuncionario(auditoria.getFuncionarioQueAlterou().getCargo());
+        dto.setCampoAlterado(auditoria.getCampoAlterado());
+        dto.setValorAnterior(auditoria.getValorAnterior());
+        dto.setValorNovo(auditoria.getValorNovo());
+        dto.setDataAlteracao(auditoria.getDataAlteracao());
+        dto.setMotivo(auditoria.getMotivo());
         return dto;
     }
 
@@ -277,7 +231,6 @@ public class AvaliacaoService {
         return "Obesidade grau III";
     }
 
-    // Cores em string para facilitar o uso no Tailwind via JS
     private String corImc(double imc) {
         if (imc < 18.5) return "blue";
         if (imc < 25.0) return "green";
