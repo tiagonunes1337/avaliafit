@@ -51,30 +51,5 @@ public class GlobalExceptionHandler {
                 .badRequest()
                 .body(Map.of("mensagem", mensagem));
     }
-
-    // ============================================================
-    //  HANDLER: erros de regra de negócio
-
-    @ExceptionHandler(RegraNegocioException.class)
-    public ResponseEntity<Map<String, String>> handleRegraNegocio(RegraNegocioException ex) {
-        return ResponseEntity.badRequest().body(Map.of("mensagem", ex.getMessage()));
-    }
-
-    // 2. Tentativas de acesso indevido (Ex: Funcionário a criar Admin) -> 403 Forbidden
-    @ExceptionHandler(AcessoNegadoException.class)
-    public ResponseEntity<Map<String, String>> handleAcessoNegado(AcessoNegadoException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("mensagem", ex.getMessage()));
-    }
-    public class RegraNegocioException extends RuntimeException {
-        public RegraNegocioException(String mensagem) {
-            super(mensagem);
-        }
-    }
-
-    public class AcessoNegadoException extends RuntimeException {
-        public AcessoNegadoException(String mensagem) {
-            super(mensagem);
-        }
-    }
     
 }

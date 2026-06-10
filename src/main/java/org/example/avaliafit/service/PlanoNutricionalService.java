@@ -28,6 +28,7 @@ public class PlanoNutricionalService {
 
         Paciente   paciente   = pacienteRepository.findById(dto.getIdPaciente())
                 .orElseThrow(() -> new RuntimeException("Paciente não encontrado."));
+
         Funcionario funcionario = funcionarioRepository.findById(dto.getIdFuncionario())
                 .orElseThrow(() -> new RuntimeException("Profissional não encontrado."));
 

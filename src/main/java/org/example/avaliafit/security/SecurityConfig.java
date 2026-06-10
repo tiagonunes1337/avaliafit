@@ -153,6 +153,7 @@ public class SecurityConfig {
                                 "/marcar.html", "/inicial.html",
                                 "/registraravaliacao.html", "/gerenciarhorarios.html",
                                 "/listarhorario.html", "/editarhorario.html",
+                                "/planonutricional.html",
                                 "/*css/**", "/img/**", "/js/**", "/error",
                                 "/auth/**"
                         ).permitAll()

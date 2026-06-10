@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plano Nutricional - Avalia FIT</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
+
+<!-- Header injetado pelo fragments.js via initPage() -->
+
+<main class="flex-grow p-6">
+    <div class="max-w-4xl mx-auto">
+
+        <!-- Título da página -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold text-white">Plano Nutricional</h1>
+            <p class="text-gray-400 mt-1">Defina as metas nutricionais e as refeições do paciente.</p>
+        </div>
+
+        <!-- SEÇÃO 1: Dados gerais do plano -->
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6 shadow-xl">
+            <h2 class="text-lg font-semibold text-green-400 mb-6 flex items-center gap-2">
+                <span class="w-2 h-2 bg-green-400 rounded-full inline-block"></span>
+                Dados Gerais
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Paciente -->
+                <div class="md:col-span-2">
+                    <label for="paciente" class="block text-gray-300 font-semibold mb-2">Paciente</label>
+                    <select id="paciente" required
+                            class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition appearance-none">
+                        <option value="">Carregando pacientes...</option>
+                    </select>
+                </div>
+
+                <!-- Data de início -->
+                <div>
+                    <label for="dataInicio" class="block text-gray-300 font-semibold mb-2">Data de Início</label>
+                    <input type="date" id="dataInicio" required
+                           class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+                </div>
+
+                <!-- Peso objetivo -->
+                <div>
+                    <label for="pesoObjetivo" class="block text-gray-300 font-semibold mb-2">Peso Objetivo (kg)</label>
+                    <input type="number" id="pesoObjetivo" step="0.1" min="0" required
+                           placeholder="Ex: 70.0"
+                           class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+                </div>
+
+                <!-- Meta de água -->
+                <div>
+                    <label for="metaAgua" class="block text-gray-300 font-semibold mb-2">Meta de Água (litros/dia)</label>
+                    <input type="number" id="metaAgua" step="0.1" min="0" required
+                           placeholder="Ex: 2.5"
+                           class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SEÇÃO 2: Metas nutricionais diárias -->
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6 shadow-xl">
+            <h2 class="text-lg font-semibold text-green-400 mb-6 flex items-center gap-2">
+                <span class="w-2 h-2 bg-green-400 rounded-full inline-block"></span>
+                Metas Nutricionais Diárias
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Kcal diário -->
+                <div class="md:col-span-2">
+                    <label for="kcalDiario" class="block text-gray-300 font-semibold mb-2">Calorias Diárias (kcal)</label>
+                    <input type="number" id="kcalDiario" step="1" min="0" required
+                           placeholder="Ex: 2000"
+                           class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+                </div>
+
+                <!-- Proteínas -->
+                <div>
+                    <label for="proteinas" class="block text-gray-300 font-semibold mb-2">Proteínas (g/dia)</label>
+                    <input type="number" id="proteinas" step="0.1" min="0" required
+                           placeholder="Ex: 150.0"
+                           class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+                </div>
+
+                <!-- Carboidratos -->
+                <div>
+                    <label for="carboidratos" class="block text-gray-300 font-semibold mb-2">Carboidratos (g/dia)</label>
+                    <input type="number" id="carboidratos" step="0.1" min="0" required
+                           placeholder="Ex: 250.0"
+                           class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+                </div>
+
+                <!-- Gorduras -->
+                <div>
+                    <label for="gorduras" class="block text-gray-300 font-semibold mb-2">Gorduras (g/dia)</label>
+                    <input type="number" id="gorduras" step="0.1" min="0" required
+                           placeholder="Ex: 55.0"
+                           class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+                </div>
+
+                <!-- Preview de macros — atualiza dinamicamente via JS -->
+                <div class="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                    <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-3">Preview de Macros</p>
+                    <div class="flex gap-4 flex-wrap">
+                        <div class="text-center">
+                            <p class="text-green-400 font-bold text-lg" id="previewProteinas">--</p>
+                            <p class="text-gray-500 text-xs">Proteínas %</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-blue-400 font-bold text-lg" id="previewCarboidratos">--</p>
+                            <p class="text-gray-500 text-xs">Carboidratos %</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-yellow-400 font-bold text-lg" id="previewGorduras">--</p>
+                            <p class="text-gray-500 text-xs">Gorduras %</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-white font-bold text-lg" id="previewKcal">--</p>
+                            <p class="text-gray-500 text-xs">Total kcal calc.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SEÇÃO 3: Refeições (cardápio) -->
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6 shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-semibold text-green-400 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-400 rounded-full inline-block"></span>
+                    Refeições do Dia
+                </h2>
+                <button id="btnAdicionarRefeicao"
+                        class="bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+                    + Adicionar Refeição
+                </button>
+            </div>
+
+            <!-- Container onde as refeições são inseridas via JS -->
+            <div id="containerRefeicoes" class="space-y-4">
+                <!-- Mensagem inicial — substituída quando refeições forem adicionadas -->
+                <div id="msgSemRefeicoes" class="text-center text-gray-500 py-8 border border-dashed border-gray-700 rounded-xl">
+                    Nenhuma refeição adicionada ainda.<br>
+                    <span class="text-sm">Clique em "+ Adicionar Refeição" para começar.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botão de salvar -->
+        <div class="flex justify-end">
+            <button id="btnSalvarPlano"
+                    class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition shadow-lg shadow-green-600/20 text-lg">
+                Salvar Plano Nutricional
+            </button>
+        </div>
+
+    </div>
+</main>
+
+<!-- Footer injetado pelo fragments.js -->
+
+<script type="module" src="js/pages/planonutricional.js"></script>
+</body>
+</html>

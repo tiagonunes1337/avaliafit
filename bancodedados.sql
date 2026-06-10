@@ -115,7 +115,6 @@ CREATE TABLE IF NOT EXISTS auditoria_avaliacao (
     REFERENCES funcionario(idFuncionario) ON DELETE RESTRICT
     );
 
--- ✅ Índices para performance
 CREATE INDEX idx_auditoria_avaliacao ON auditoria_avaliacao(idAvaliacao);
 CREATE INDEX idx_auditoria_funcionario ON auditoria_avaliacao(idFuncionarioAlterou);
 CREATE INDEX idx_auditoria_data ON auditoria_avaliacao(dataAlteracao);

@@ -6,10 +6,9 @@ import org.example.avaliafit.dto.AvaliacaoRequestDTO;
 import org.example.avaliafit.dto.AvaliacaoResponseDTO;
 import org.example.avaliafit.dto.AuditoriaAvaliacaoResponseDTO;
 import org.example.avaliafit.dto.AvaliacaoUpdateRequestDTO;
-import org.example.avaliafit.exception.AcessoNegadoException;
-import org.example.avaliafit.exception.RegraNegocioException;
 import org.example.avaliafit.model.Agendamento;
 import org.example.avaliafit.model.Avaliacao;
+import org.example.avaliafit.model.AuditoriaAvaliacao;
 import org.example.avaliafit.model.Funcionario;
 import org.example.avaliafit.model.Paciente;
 import org.example.avaliafit.model.Usuario;
@@ -18,6 +17,8 @@ import org.example.avaliafit.repository.AuditoriaAvaliacaoRepository;
 import org.example.avaliafit.repository.AvaliacaoRepository;
 import org.example.avaliafit.repository.FuncionarioRepository;
 import org.example.avaliafit.repository.PacienteRepository;
+import org.example.avaliafit.exception.AcessoNegadoException;
+import org.example.avaliafit.exception.RegraNegocioException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -35,13 +36,12 @@ public class AvaliacaoService {
     private final AgendamentoRepository agendamentoRepository;
     private final AuditoriaAvaliacaoRepository auditoriaRepository;
     private final FuncionarioRepository funcionarioRepository;
-
-    // INJEÇÃO CORRETA DO SERVIÇO DE AUDITORIA
     private final AuditoriaAvaliacaoService auditoriaService;
 
     // == CREATE ==========================================================
     @Transactional
     public AvaliacaoResponseDTO registrar(AvaliacaoRequestDTO dto) {
+
 
         Agendamento agendamento = agendamentoRepository.findById(dto.getIdAgendamento())
                 .orElseThrow(() -> new RegraNegocioException("Agendamento não encontrado."));
@@ -49,6 +49,7 @@ public class AvaliacaoService {
         if (agendamento.getAvaliacao() != null) {
             throw new RegraNegocioException("Este agendamento já possui uma avaliação registrada.");
         }
+
         if (dto.getAltura() == null || dto.getAltura().compareTo(BigDecimal.ZERO) <= 0) {
             throw new RegraNegocioException("A altura deve ser maior que zero.");
         }
@@ -77,7 +78,10 @@ public class AvaliacaoService {
 
     // == UPDATE COM AUDITORIA ============================================
     @Transactional
-    public AvaliacaoResponseDTO atualizar(Integer idAvaliacao, AvaliacaoUpdateRequestDTO dto, Integer idFuncionarioLogado) {
+    public AvaliacaoResponseDTO atualizar(
+            Integer idAvaliacao,
+            AvaliacaoUpdateRequestDTO dto,
+            Integer idFuncionarioLogado) {
 
         if (dto.getMotivo() == null || dto.getMotivo().isBlank()) {
             throw new RegraNegocioException("O motivo da alteração é obrigatório para fins de auditoria.");
@@ -93,7 +97,7 @@ public class AvaliacaoService {
         Funcionario funcionarioLogado = funcionarioRepository.findById(idFuncionarioLogado)
                 .orElseThrow(() -> new RegraNegocioException("Funcionário logado não encontrado."));
 
-        // COMPARAÇÕES ISOLADAS USANDO O SERVIÇO INJETADO (Sem Ifs caóticos)
+        // Registra auditoria apenas dos campos que mudaram
         auditoriaService.registrarSeAlterado(avaliacaoAntiga, funcionarioLogado, "Peso",
                 String.valueOf(avaliacaoAntiga.getPeso()), String.valueOf(dto.getPeso()), dto.getMotivo());
 
@@ -109,30 +113,38 @@ public class AvaliacaoService {
         auditoriaService.registrarSeAlterado(avaliacaoAntiga, funcionarioLogado, "Observações",
                 avaliacaoAntiga.getObservacoes(), dto.getObservacoes(), dto.getMotivo());
 
-        // ATUALIZAÇÃO DA ENTIDADE (Apenas uma vez)
-        if (dto.getPeso() != null) avaliacaoAntiga.setPeso(dto.getPeso());
-        if (dto.getAltura() != null) avaliacaoAntiga.setAltura(dto.getAltura());
+        // Aplica as alterações
+        if (dto.getPeso() != null)              avaliacaoAntiga.setPeso(dto.getPeso());
+        if (dto.getAltura() != null)            avaliacaoAntiga.setAltura(dto.getAltura());
         if (dto.getPercentualGordura() != null) avaliacaoAntiga.setPercentualGordura(dto.getPercentualGordura());
-        if (dto.getMassaMuscular() != null) avaliacaoAntiga.setMassaMuscular(dto.getMassaMuscular());
-        if (dto.getObservacoes() != null) avaliacaoAntiga.setObservacoes(dto.getObservacoes());
+        if (dto.getMassaMuscular() != null)     avaliacaoAntiga.setMassaMuscular(dto.getMassaMuscular());
+        if (dto.getObservacoes() != null)       avaliacaoAntiga.setObservacoes(dto.getObservacoes());
 
-        // RECALCULAR IMC se peso ou altura mudaram
+        // Recalcula IMC se peso ou altura mudaram
         if (dto.getPeso() != null || dto.getAltura() != null) {
             avaliacaoAntiga.setImc(calcularImc(avaliacaoAntiga.getPeso(), avaliacaoAntiga.getAltura()));
         }
 
-        Avaliacao avaliacaoAtualizada = avaliacaoRepository.save(avaliacaoAntiga);
-        return toResponseDTO(avaliacaoAtualizada);
+        return toResponseDTO(avaliacaoRepository.save(avaliacaoAntiga));
     }
 
-    // == LISTAGEM DE AUDITORIA ===========================================
-    public List<AuditoriaAvaliacaoResponseDTO> listarAuditoria(Integer idAvaliacao, Usuario usuarioLogado) {
+    // == AUDITORIA =======================================================
+    public List<AuditoriaAvaliacaoResponseDTO> listarAuditoria(
+            Integer idAvaliacao,
+            Usuario usuarioLogado) {
+
         Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)
                 .orElseThrow(() -> new RegraNegocioException("Avaliação não encontrada."));
 
+        // ============================================================
+        //  CORREÇÃO: AcessoNegadoException agora está importada
+        //  e usa "new" corretamente
+        // ============================================================
         if ("ROLE_PACIENTE".equals(usuarioLogado.getRole()) &&
-                !avaliacao.getPaciente().getUsuario().getIdUsuario().equals(usuarioLogado.getIdUsuario())) {
-            throw new AcessoNegadoException("Acesso negado: apenas o paciente dono ou a equipe podem ver este histórico.");
+                !avaliacao.getPaciente().getUsuario().getIdUsuario()
+                        .equals(usuarioLogado.getIdUsuario())) {
+            throw new AcessoNegadoException(
+                    "Acesso negado: apenas o paciente dono ou a equipe podem ver este histórico.");
         }
 
         return auditoriaRepository.findByAvaliacaoOrderByDataAlteracaoDesc(avaliacao)
@@ -208,7 +220,7 @@ public class AvaliacaoService {
         return dto;
     }
 
-    private AuditoriaAvaliacaoResponseDTO toAuditoriaResponseDTO(org.example.avaliafit.model.AuditoriaAvaliacao auditoria) {
+    private AuditoriaAvaliacaoResponseDTO toAuditoriaResponseDTO(AuditoriaAvaliacao auditoria) {
         AuditoriaAvaliacaoResponseDTO dto = new AuditoriaAvaliacaoResponseDTO();
         dto.setIdAuditoria(auditoria.getIdAuditoria());
         dto.setIdAvaliacao(auditoria.getAvaliacao().getIdAvaliacao());
